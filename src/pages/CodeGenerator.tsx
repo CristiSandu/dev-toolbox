@@ -14,11 +14,16 @@ import {
 import { SingleCodeTab } from "@/components/code-generator/SingleCodeTab";
 import { MultiCodeTab } from "@/components/code-generator/MultiCodeTab";
 import { CodegenHistory } from "@/components/code-generator/CodegenHistory";
+import { History } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 export default function CodeGenerator() {
   // Single editor state
   const [singleText, setSingleText] = useState("");
-  const [singleType, setSingleType] = useState<CodeType>("QR Code");
+  const [singleType, setSingleType] = useState<CodeType>("EAN-13");
+
+  const [selectedTab, setSelectedTab] = useState<string>("single");
 
   // Multi editor state
   const [multiText, setMultiText] = useState("");
@@ -69,19 +74,37 @@ export default function CodeGenerator() {
       if (p.multiText !== undefined) setMultiText(p.multiText);
       setLastSavedMulti(p);
     }
+
     toast("History state loaded into editor");
   };
 
   return (
     <div className="p-4 h-full w-full md:overflow-hidden overflow-y-auto">
-      <Tabs defaultValue="single" className="h-full flex flex-col">
-        <TabsList className="w-fit mb-4">
-          <TabsTrigger value="single" className="w-[200px]">
-            Single
-          </TabsTrigger>
-          <TabsTrigger value="multi">Multi</TabsTrigger>
-          <TabsTrigger value="history">History</TabsTrigger>
-        </TabsList>
+      <Tabs
+        value={selectedTab}
+        onValueChange={setSelectedTab}
+        className="h-full flex flex-col"
+      >
+        <div className="flex justify-between">
+          <TabsList className="w-fit mb-4">
+            <TabsTrigger value="single" className="w-[200px]">
+              Single
+            </TabsTrigger>
+            <TabsTrigger value="multi">Multi</TabsTrigger>
+          </TabsList>
+          <Button
+            className={cn(
+              "flex gap-2 text-black hover:bg-accent shadow p-0",
+              selectedTab === "history" ? "bg-accent" : "bg-transparent"
+            )}
+            onClick={() => {
+              setSelectedTab("history");
+            }}
+          >
+            <History className="h-6 w-6" />
+            History
+          </Button>
+        </div>
 
         <TabsContent value="single" className="h-full flex-1">
           <SingleCodeTab

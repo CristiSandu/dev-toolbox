@@ -3,7 +3,6 @@
 import {
   Sidebar,
   SidebarContent,
-  SidebarHeader,
   SidebarGroup,
   SidebarGroupLabel,
   SidebarMenu,
@@ -12,7 +11,7 @@ import {
 } from "@/components/ui/sidebar";
 
 import { Link, useLocation } from "react-router-dom";
-import { ClipboardList, Code, Diff, QrCode } from "lucide-react";
+import { ClipboardList, Code, QrCode } from "lucide-react";
 
 export function AppSidebar() {
   const location = useLocation();
@@ -20,16 +19,12 @@ export function AppSidebar() {
   const links = [
     { to: "/task", label: "Task Generator", icon: ClipboardList },
     { to: "/xaml", label: "XAML Formatter", icon: Code },
-    { to: "/diff", label: "Diff Viewer", icon: Diff },
+    // { to: "/diff", label: "Diff Viewer", icon: Diff },
     { to: "/codes", label: "Code Generator", icon: QrCode },
   ];
 
   return (
-    <Sidebar className="border-r w-64">
-      <SidebarHeader className="text-xl font-semibold p-4">
-        Dev Toolbox
-      </SidebarHeader>
-
+    <Sidebar variant="inset" collapsible="icon" className="border-r w-64">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Tools</SidebarGroupLabel>

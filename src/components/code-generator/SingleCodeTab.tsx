@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/resizable";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Copy, Download } from "lucide-react";
 import { useBarcode } from "@/hooks/use-barcode";
 import {
@@ -27,6 +26,14 @@ import {
   getSinglePlaceholder,
   isSamePayload,
 } from "@/lib/barcode-utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import { Textarea } from "../ui/textarea";
 
 interface SingleCodeTabProps {
   singleText: string;
@@ -82,24 +89,31 @@ export function SingleCodeTab(props: SingleCodeTabProps) {
         <CardTitle>Single Code</CardTitle>
       </CardHeader>
 
-      <CardContent className="flex flex-col gap-4">
-        <select
-          className="border rounded p-2"
-          value={singleType}
-          onChange={(e) => onChangeType(e.target.value as CodeType)}
-        >
-          {CODE_TYPES.map((t) => (
-            <option key={t}>{t}</option>
-          ))}
-        </select>
-
-        <Input
+      <CardContent className="flex flex-col gap-4 border-t p-2">
+        <Textarea
+          className="min-h-[140px] font-mono text-xs"
           placeholder={getSinglePlaceholder(singleType)}
           value={singleText}
           onChange={(e) => onChangeText(e.target.value)}
         />
-
-        <Button onClick={generateSingle}>Generate</Button>
+        <div className="flex w-full gap-2">
+          <Button onClick={generateSingle} className="flex-1">
+            Generate
+          </Button>
+          <Select
+            value={singleType}
+            onValueChange={(e) => onChangeType(e as CodeType)}
+          >
+            <SelectTrigger>
+              <SelectValue className="w-60" placeholder="Code type" />
+            </SelectTrigger>
+            <SelectContent>
+              {CODE_TYPES.map((t) => (
+                <SelectItem value={t}>{t}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
         {singleError && (
           <p className="text-sm text-red-500 mt-2">

@@ -30,6 +30,13 @@ import {
   MULTI_JSON_PLACEHOLDER,
   normalizeType,
 } from "@/lib/barcode-utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 
 interface MultiCodeTabProps {
   multiText: string;
@@ -177,31 +184,49 @@ export function MultiCodeTab(props: MultiCodeTabProps) {
       </CardHeader>
 
       <CardContent className="flex flex-col gap-3 flex-1 min-h-0">
-        <div className="flex items-center gap-2 text-xs">
-          <span className="font-medium">Input mode:</span>
-          <select
-            value={multiMode}
-            onChange={(e) => onChangeMode(e.target.value as MultiInputMode)}
-            className="border rounded px-2 py-1 text-xs"
-          >
-            <option value="lines">Lines</option>
-            <option value="json">JSON</option>
-          </select>
-        </div>
+        <div className="flex-col w-full gap-2 space-y-2">
+          <div className="flex items-center gap-2 text-xs flex-1">
+            <span className="text-sm font-medium">Input mode:</span>
+            <Select
+              value={multiMode}
+              onValueChange={(e) => onChangeMode(e as MultiInputMode)}
+            >
+              <SelectTrigger>
+                <SelectValue className="w-60" placeholder="Code type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="lines">Lines</SelectItem>
+                <SelectItem value="json">JSON</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center gap-2 text-xs flex-1">
+            <span className="text-sm font-medium">Code type:</span>
+            <Select
+              value={multiType}
+              disabled={multiMode === "json"}
+              onValueChange={(e) => onChangeType(e as CodeType)}
+            >
+              <SelectTrigger>
+                <SelectValue
+                  className={cn(
+                    "border rounded p-2 text-sm",
+                    multiMode === "json" && "opacity-50 cursor-not-allowed"
+                  )}
+                  placeholder="Code type"
+                />
+              </SelectTrigger>
 
-        <select
-          className={cn(
-            "border rounded p-2 text-sm",
-            multiMode === "json" && "opacity-50 cursor-not-allowed"
-          )}
-          value={multiType}
-          onChange={(e) => onChangeType(e.target.value as CodeType)}
-          disabled={multiMode === "json"}
-        >
-          {CODE_TYPES.map((t) => (
-            <option key={t}>{t}</option>
-          ))}
-        </select>
+              <SelectContent>
+                {CODE_TYPES.map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {t}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
 
         <Textarea
           className="min-h-[140px] font-mono text-xs"
