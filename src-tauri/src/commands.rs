@@ -13,13 +13,14 @@ pub struct Task {
 
 #[tauri::command]
 pub fn save_task(
+    app: tauri::AppHandle,
     name: String,
     number: String,
     feature_type: String,
     branch: String,
     pr_title: String,
 ) -> Result<(), String> {
-    let conn = crate::db::get_db().map_err(|e| e.to_string())?;
+    let conn = crate::db::get_db(&app).map_err(|e| e.to_string())?;
 
     let now = chrono::Utc::now().to_rfc3339();
 
@@ -34,8 +35,8 @@ pub fn save_task(
 }
 
 #[tauri::command]
-pub fn get_tasks() -> Result<Vec<Task>, String> {
-    let conn = crate::db::get_db().map_err(|e| e.to_string())?;
+pub fn get_tasks(app: tauri::AppHandle) -> Result<Vec<Task>, String> {
+    let conn = crate::db::get_db(&app).map_err(|e| e.to_string())?;
 
     let mut stmt = conn
         .prepare(

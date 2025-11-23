@@ -4,7 +4,6 @@ use base64::prelude::*;
 use datamatrix::placement::Bitmap;
 use datamatrix::{DataMatrix, SymbolList};
 use quickcodes::{generate, BarcodeType, ExportFormat};
-use tauri::command;
 use urlencoding::encode;
 
 // Types that match what we used on the TS side

@@ -1,4 +1,5 @@
 mod barcodes;
+mod codegen_history;
 mod commands;
 mod db;
 
@@ -15,7 +16,10 @@ pub fn run() {
             greet,
             commands::save_task,
             commands::get_tasks,
-            barcodes::generate_barcode
+            barcodes::generate_barcode,
+            codegen_history::save_codegen_state,
+            codegen_history::get_codegen_history,
+            codegen_history::delete_codegen_entry,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
