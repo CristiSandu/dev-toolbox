@@ -7,6 +7,7 @@ use quickcodes::{generate, BarcodeType, ExportFormat};
 use urlencoding::encode;
 
 // Types that match what we used on the TS side
+// Types that match what we used on the TS side
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum CodeKind {
