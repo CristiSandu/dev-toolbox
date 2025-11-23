@@ -3,6 +3,7 @@ import { AppSidebar } from "./components/app-sidebar";
 import { Outlet } from "react-router-dom";
 import { SidebarProvider } from "./components/ui/sidebar";
 import { AppHeader } from "./components/app-header";
+import { Toaster } from "sonner";
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
           <AppHeader />
           <main className="flex-1 overflow-auto bg-background p-6">
             <Outlet />
+            <Toaster />
           </main>
         </div>
       </div>

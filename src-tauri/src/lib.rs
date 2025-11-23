@@ -1,3 +1,4 @@
+mod barcodes;
 mod commands;
 mod db;
 
@@ -13,7 +14,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             greet,
             commands::save_task,
-            commands::get_tasks
+            commands::get_tasks,
+            barcodes::generate_barcode
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
