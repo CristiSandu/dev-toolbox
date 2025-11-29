@@ -1,7 +1,8 @@
+import { sanitizeBarcodeInput } from "@/lib/utils";
 import { invoke } from "@tauri-apps/api/core";
 import { useState } from "react";
 
-type CodeKind = "qr" | "datamatrix" | "ean13" | "ean128";
+type CodeKind = "qr" | "datamatrix" | "ean13" | "code128";
 type ImageFormat = "svg" | "png";
 
 export function useBarcode() {
@@ -13,7 +14,7 @@ export function useBarcode() {
         try {
             const result = await invoke<string>("generate_barcode", {
                 kind,
-                data,
+                data: sanitizeBarcodeInput(data),
                 format,
             });
             setSrc(result);

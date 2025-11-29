@@ -101,7 +101,7 @@ export const getSinglePlaceholder = (type: CodeType): string => {
             return "13-digit EAN (e.g. 5901234123457)";
         case "DataMatrix":
             return "Free text / GS1 payload";
-        case "Ean128":
+        case "Code128":
             return "(01)09501101530008(10)ABC123";
         default:
             return "Text to encode";
@@ -116,7 +116,7 @@ export const getMultiPlaceholderLines = (type: CodeType): string => {
             return "One 13-digit EAN per line";
         case "DataMatrix":
             return "One value per line";
-        case "Ean128":
+        case "Code128":
             return "One GS1 string per line, e.g.\n(01)09501101530008(10)ABC123";
         default:
             return "Enter one value per line";
@@ -156,7 +156,7 @@ export const normalizeType = (
         }
     }
 
-    const kindValues: CodeKind[] = ["qr", "ean13", "datamatrix", "ean128"];
+    const kindValues: CodeKind[] = ["qr", "ean13", "datamatrix", "code128"];
     if (kindValues.includes(v as CodeKind)) {
         const kind = v as CodeKind;
         const uiType = CODE_TYPES.find((t) => CODE_TYPE_TO_KIND[t] === kind)!;

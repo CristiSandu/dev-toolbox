@@ -1,4 +1,3 @@
-// src/components/code-generator/MultiCodeTab.tsx
 "use client";
 
 import { useState } from "react";
@@ -11,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Copy, Download } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, sanitizeBarcodeInput } from "@/lib/utils";
 import { invoke } from "@tauri-apps/api/core";
 import { toast } from "sonner";
 import {
@@ -95,13 +94,17 @@ export function MultiCodeTab(props: MultiCodeTabProps) {
           return;
         }
 
+        const kind = CODE_TYPES.includes(multiType)
+          ? normalizeType(multiType)?.kind ?? "qr"
+          : "qr";
+
+        const format = multiType === "Code128" ? "png" : "svg";
+
         for (const item of lines) {
           const dataUrl = await invoke<string>("generate_barcode", {
-            kind: CODE_TYPES.includes(multiType)
-              ? normalizeType(multiType)?.kind ?? "qr"
-              : "qr",
-            data: item,
-            format: "svg",
+            kind: kind,
+            data: sanitizeBarcodeInput(item),
+            format: format,
           });
 
           newResults.push({ text: item, dataUrl, type: multiType });
@@ -142,10 +145,13 @@ export function MultiCodeTab(props: MultiCodeTabProps) {
             continue;
           }
 
+          const formatForType = (t: CodeType) =>
+            t === "Code128" ? "png" : "svg";
+
           const dataUrl = await invoke<string>("generate_barcode", {
             kind: normalized.kind,
-            data: text,
-            format: "svg",
+            data: sanitizeBarcodeInput(text),
+            format: formatForType(normalized.uiType),
           });
 
           newResults.push({
@@ -241,7 +247,7 @@ export function MultiCodeTab(props: MultiCodeTabProps) {
 
         <Button onClick={generateMulti}>Generate List</Button>
 
-        {multiMode === "lines" && multiType === "Ean128" && (
+        {multiMode === "lines" && multiType === "Code128" && (
           <p className="text-xs text-muted-foreground">
             Each line should be a GS1 string: e.g.
             <br />

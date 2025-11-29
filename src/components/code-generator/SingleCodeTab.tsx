@@ -68,7 +68,9 @@ export function SingleCodeTab(props: SingleCodeTabProps) {
     if (!singleText.trim()) return;
 
     const kind = CODE_TYPE_TO_KIND[singleType];
-    generateSingleBarcode(kind as CodeKind, singleText, "svg");
+    const format = singleType === "Code128" ? "png" : "svg";
+
+    generateSingleBarcode(kind as CodeKind, singleText, format);
 
     const payload: HistoryPayload = {
       mode: "single",
@@ -121,7 +123,7 @@ export function SingleCodeTab(props: SingleCodeTabProps) {
           </p>
         )}
 
-        {singleType === "Ean128" && (
+        {singleType === "Code128" && (
           <p className="text-xs text-muted-foreground">
             Format: GS1 AIs like <code>(01)</code>, <code>(10)</code>, etc.
             Example: <code>(01)09501101530008(10)ABC123</code>
