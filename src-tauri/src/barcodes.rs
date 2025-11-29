@@ -6,6 +6,10 @@ use datamatrix::{DataMatrix, SymbolList};
 use quickcodes::{generate, BarcodeType, ExportFormat};
 use urlencoding::encode;
 
+use barcoders::generators::image::{Color, Image as ImageGen, Rotation};
+use barcoders::generators::svg::SVG as SvgGen;
+use barcoders::sym::code128::Code128;
+
 // Types that match what we used on the TS side
 // Types that match what we used on the TS side
 #[derive(serde::Deserialize)]
@@ -14,7 +18,7 @@ pub enum CodeKind {
     Qr,
     Datamatrix,
     Ean13,
-    Ean128, // GS1-128 using Code128 symbology
+    Code128,
 }
 
 #[derive(serde::Deserialize)]
@@ -84,6 +88,23 @@ fn normalize_ean13(input: &str) -> Result<String, String> {
     }
 }
 
+fn clean_for_code128(input: &str) -> String {
+    input
+        .chars()
+        // drop control characters like \n, \r, \t etc.
+        .filter(|c| !c.is_control())
+        // keep only ASCII; replace non-ASCII with '?' so we still see something
+        .map(|c| if c.is_ascii() { c } else { '?' })
+        .collect()
+}
+
+fn to_code128_data(raw: &str) -> String {
+    let cleaned = clean_for_code128(raw);
+
+    // Start with Code128 charset B: 'Ɓ' (\u{0181})
+    format!("\u{0181}{}", cleaned)
+}
+
 #[tauri::command]
 pub fn generate_barcode(
     kind: CodeKind,
@@ -126,18 +147,50 @@ pub fn generate_barcode(
         }
 
         //
-        // ---------- EAN-128 (GS1-128) via Code128 ----------
+        // ---------- Code128 via barcoders ----------
         //
-        (CodeKind::Ean128, ImageFormat::Svg) => {
-            // NOTE: if you want strict GS1-128, preprocess `data` with AIs
-            let svg_bytes =
-                generate(BarcodeType::Code128, &data, ExportFormat::SVG).map_err(to_err)?;
-            let svg = String::from_utf8(svg_bytes).map_err(to_err)?;
-            Ok(format!("data:image/svg+xml;utf8,{}", encode(&svg)))
+        (CodeKind::Code128, ImageFormat::Svg) => {
+            eprintln!("Entering Code128 SVG branch with data: {data:?}");
+
+            let cleaned = to_code128_data(&data);
+            if cleaned.is_empty() {
+                return Err("Input is empty or only contains invalid characters".into());
+            }
+
+            let barcode = Code128::new(&cleaned).map_err(|e| format!("Code128 error: {:?}", e))?;
+            let encoded = barcode.encode();
+
+            // height in px; 60–100 is usually good
+            let svg_gen = SvgGen::new(80);
+            // SvgGen::generate already returns Result<String, Error>
+            let svg_str = svg_gen
+                .generate(&encoded)
+                .map_err(|e| format!("Code128 SVG error: {:?}", e))?;
+
+            Ok(format!("data:image/svg+xml;utf8,{}", encode(&svg_str)))
         }
-        (CodeKind::Ean128, ImageFormat::Png) => {
-            let png_bytes =
-                generate(BarcodeType::Code128, &data, ExportFormat::PNG).map_err(to_err)?;
+
+        (CodeKind::Code128, ImageFormat::Png) => {
+            let cleaned = to_code128_data(&data);
+            if cleaned.is_empty() {
+                return Err("Input is empty or only contains invalid characters".into());
+            }
+
+            let barcode = Code128::new(&cleaned).map_err(|e| format!("Code128 error: {:?}", e))?;
+            let encoded = barcode.encode();
+
+            let img_gen = ImageGen::PNG {
+                height: 80,
+                xdim: 2, // bar width in px; 2–3 px is safe for scanners
+                rotation: Rotation::Zero,
+                background: Color::new([255, 255, 255, 255]), // white
+                foreground: Color::new([0, 0, 0, 255]),       // black
+            };
+
+            let png_bytes = img_gen
+                .generate(&encoded)
+                .map_err(|e| format!("Code128 PNG error: {:?}", e))?;
+
             let b64 = BASE64_STANDARD.encode(png_bytes);
             Ok(format!("data:image/png;base64,{}", b64))
         }
