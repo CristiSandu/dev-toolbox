@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Copy, Plus } from "lucide-react";
+import { Copy, Plus, Trash2 } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import { Task } from "@/lib/types/task";
 
@@ -22,6 +22,7 @@ import {
   ResizablePanel,
   ResizableHandle,
 } from "@/components/ui/resizable";
+import AnimatedCopyButton from "@/components/animated-copy-button";
 
 export default function TaskGenerator() {
   // Form state
@@ -95,6 +96,25 @@ export default function TaskGenerator() {
     setBranchType(t.feature_type);
   };
 
+  const deleteTask = async (id: number) => {
+    try {
+      await invoke("delete_task", { id });
+
+      // If we were viewing this task, reset the form
+      if (selectedTask?.id === id) {
+        resetForm();
+      }
+
+      // Reload tasks from DB
+      await loadTasks();
+
+      // or optimistic update instead of reload:
+      // setTasks((prev) => prev.filter((t) => t.id !== id));
+    } catch (e) {
+      console.error("Failed to delete task", e);
+    }
+  };
+
   const isViewOnly = selectedTask !== null;
 
   // LEFT PANEL UI
@@ -142,12 +162,7 @@ export default function TaskGenerator() {
 
             <Input value={generatedBranch} readOnly />
 
-            <Button
-              size="icon"
-              onClick={() => copyToClipboard(generatedBranch)}
-            >
-              <Copy size={16} />
-            </Button>
+            <AnimatedCopyButton text={generatedBranch} />
           </div>
         </div>
 
@@ -156,9 +171,8 @@ export default function TaskGenerator() {
           <label className="text-sm font-medium">Generated PR Title</label>
           <div className="flex items-center gap-2 mt-1">
             <Input value={generatedPR} readOnly />
-            <Button size="icon" onClick={() => copyToClipboard(generatedPR)}>
-              <Copy size={16} />
-            </Button>
+
+            <AnimatedCopyButton text={generatedPR} />
           </div>
         </div>
 
@@ -218,7 +232,7 @@ export default function TaskGenerator() {
               <div
                 key={t.id}
                 onClick={() => onSelectTask(t)}
-                className={`p-3 rounded border cursor-pointer hover:bg-muted transition 
+                className={`relative p-3 rounded border cursor-pointer hover:bg-muted transition 
                 ${selectedTask?.id === t.id ? "bg-muted" : ""}`}
               >
                 <div className="font-medium">{t.pr_title}</div>
@@ -226,6 +240,15 @@ export default function TaskGenerator() {
                 <div className="text-[10px] text-muted-foreground">
                   {new Date(t.created_at).toLocaleString()}
                 </div>
+                <button
+                  className="absolute right-1 top-1 p-1 rounded hover:bg-destructive/10"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteTask(t.id);
+                  }}
+                >
+                  <Trash2 className="h-3 w-3 text-destructive" />
+                </button>
               </div>
             ))}
           </div>

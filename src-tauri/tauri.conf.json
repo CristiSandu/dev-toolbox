@@ -13,8 +13,9 @@
     "windows": [
       {
         "title": "dev-toolbox",
-        "width": 800,
-        "height": 600
+        "fullscreen": false,
+        "maximized": true,
+        "resizable": true
       }
     ],
     "security": {

@@ -34,6 +34,7 @@ import {
   SelectValue,
 } from "../ui/select";
 import { Textarea } from "../ui/textarea";
+import { AnimatedActionButton } from "../animated-action-button";
 
 interface SingleCodeTabProps {
   singleText: string;
@@ -185,30 +186,30 @@ export function SingleCodeTab(props: SingleCodeTabProps) {
             </p>
 
             <div className="flex flex-wrap gap-2 justify-center">
-              <Button
-                onClick={() =>
+              <AnimatedActionButton
+                onAction={() =>
                   downloadSvgFromDataUrl(singleSrc, singleText || "code")
                 }
-                className="flex gap-2"
-              >
-                <Download size={16} /> SVG
-              </Button>
+                label="SVG"
+                Icon={Download}
+                doneLabel="Saved"
+              />
 
-              <Button
-                onClick={() =>
+              <AnimatedActionButton
+                onAction={() =>
                   downloadPngFromDataUrl(singleSrc, singleText || "code")
                 }
-                className="flex gap-2"
-              >
-                <Download size={16} /> PNG
-              </Button>
+                label="PNG"
+                Icon={Download}
+                doneLabel="Saved"
+              />
 
-              <Button
-                onClick={() => copySvgFromDataUrl(singleSrc)}
-                className="flex gap-2"
-              >
-                <Copy size={16} /> Copy SVG
-              </Button>
+              <AnimatedActionButton
+                onAction={() => copySvgFromDataUrl(singleSrc)}
+                label="Copy SVG"
+                Icon={Copy}
+                doneLabel="Copied"
+              />
             </div>
           </>
         )}

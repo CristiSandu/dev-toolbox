@@ -36,6 +36,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+import { AnimatedActionButton } from "../animated-action-button";
 
 interface MultiCodeTabProps {
   multiText: string;
@@ -355,35 +356,38 @@ export function MultiCodeTab(props: MultiCodeTabProps) {
             </p>
 
             <div className="flex flex-wrap gap-2 justify-center">
-              <Button
-                onClick={() =>
+              <AnimatedActionButton
+                onAction={() =>
                   downloadSvgFromDataUrl(
                     results[selectedIndex].dataUrl,
                     results[selectedIndex].text
                   )
                 }
-              >
-                <Download size={16} /> SVG
-              </Button>
+                label="SVG"
+                Icon={Download}
+                doneLabel="Saved"
+              />
 
-              <Button
-                onClick={() =>
+              <AnimatedActionButton
+                onAction={() =>
                   downloadPngFromDataUrl(
                     results[selectedIndex].dataUrl,
                     results[selectedIndex].text
                   )
                 }
-              >
-                <Download size={16} /> PNG
-              </Button>
+                label="PNG"
+                Icon={Download}
+                doneLabel="Saved"
+              />
 
-              <Button
-                onClick={() =>
+              <AnimatedActionButton
+                onAction={() =>
                   copySvgFromDataUrl(results[selectedIndex].dataUrl)
                 }
-              >
-                <Copy size={16} /> Copy SVG
-              </Button>
+                label="Copy SVG"
+                Icon={Copy}
+                doneLabel="Copied"
+              />
             </div>
           </>
         )}

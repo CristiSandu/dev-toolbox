@@ -35,6 +35,14 @@ pub fn save_task(
 }
 
 #[tauri::command]
+pub fn delete_task(app: tauri::AppHandle, id: i64) -> Result<(), String> {
+    let conn = crate::db::get_db(&app).map_err(|e| e.to_string())?;
+    conn.execute("DELETE FROM tasks WHERE id = ?1", (id,))
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
 pub fn get_tasks(app: tauri::AppHandle) -> Result<Vec<Task>, String> {
     let conn = crate::db::get_db(&app).map_err(|e| e.to_string())?;
 
@@ -67,4 +75,36 @@ pub fn get_tasks(app: tauri::AppHandle) -> Result<Vec<Task>, String> {
     }
 
     Ok(tasks)
+}
+
+#[tauri::command]
+pub fn get_last_task(app: tauri::AppHandle) -> Result<Option<Task>, String> {
+    let conn = crate::db::get_db(&app).map_err(|e| e.to_string())?;
+
+    let mut stmt = conn
+        .prepare(
+            "SELECT id, name, number, feature_type, branch, pr_title, created_at
+             FROM tasks
+             ORDER BY datetime(created_at) DESC
+             LIMIT 1",
+        )
+        .map_err(|e| e.to_string())?;
+
+    let result = stmt.query_row([], |row| {
+        Ok(Task {
+            id: row.get(0)?,
+            name: row.get(1)?,
+            number: row.get(2)?,
+            feature_type: row.get(3)?,
+            branch: row.get(4)?,
+            pr_title: row.get(5)?,
+            created_at: row.get(6)?,
+        })
+    });
+
+    match result {
+        Ok(task) => Ok(Some(task)),
+        Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+        Err(e) => Err(e.to_string()),
+    }
 }

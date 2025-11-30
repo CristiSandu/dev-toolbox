@@ -16,6 +16,8 @@ pub fn run() {
             greet,
             commands::save_task,
             commands::get_tasks,
+            commands::delete_task,
+            commands::get_last_task,
             barcodes::generate_barcode,
             codegen_history::save_codegen_state,
             codegen_history::get_codegen_history,
