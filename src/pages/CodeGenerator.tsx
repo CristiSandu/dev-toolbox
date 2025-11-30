@@ -31,6 +31,7 @@ export default function CodeGenerator() {
   const [multiMode, setMultiMode] = useState<MultiInputMode>("lines");
 
   const [historyRefreshToken, setHistoryRefreshToken] = useState(0);
+  const [generationRefreshToken, setGenerationRefreshToken] = useState(0);
 
   const [lastSavedMulti, setLastSavedMulti] = useState<HistoryPayload | null>(
     null
@@ -68,11 +69,15 @@ export default function CodeGenerator() {
       if (p.singleType) setSingleType(p.singleType);
       if (p.singleText !== undefined) setSingleText(p.singleText);
       setLastSavedSingle(p);
+      setSelectedTab("single");
+      setGenerationRefreshToken((g) => g + 1);
     } else {
       if (p.multiMode) setMultiMode(p.multiMode);
       if (p.multiType) setMultiType(p.multiType);
       if (p.multiText !== undefined) setMultiText(p.multiText);
       setLastSavedMulti(p);
+      setSelectedTab("multi");
+      setGenerationRefreshToken((g) => g + 1);
     }
 
     toast("History state loaded into editor");
@@ -108,6 +113,7 @@ export default function CodeGenerator() {
 
         <TabsContent value="single" className="h-full flex-1">
           <SingleCodeTab
+            refreshToken={generationRefreshToken}
             singleText={singleText}
             singleType={singleType}
             onChangeText={setSingleText}
@@ -120,6 +126,7 @@ export default function CodeGenerator() {
 
         <TabsContent value="multi" className="h-full flex-1">
           <MultiCodeTab
+            refreshToken={generationRefreshToken}
             multiText={multiText}
             multiType={multiType}
             multiMode={multiMode}

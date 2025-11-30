@@ -1,7 +1,7 @@
 // src/components/code-generator/SingleCodeTab.tsx
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ResizablePanelGroup,
   ResizablePanel,
@@ -39,6 +39,7 @@ interface SingleCodeTabProps {
   singleText: string;
   singleType: CodeType;
   lastSavedSingle: HistoryPayload | null;
+  refreshToken: number;
   onChangeText: (value: string) => void;
   onChangeType: (value: CodeType) => void;
   onSaveHistory: (payload: HistoryPayload) => Promise<void>;
@@ -50,6 +51,7 @@ export function SingleCodeTab(props: SingleCodeTabProps) {
     singleText,
     singleType,
     lastSavedSingle,
+    refreshToken,
     onChangeText,
     onChangeType,
     onSaveHistory,
@@ -84,6 +86,10 @@ export function SingleCodeTab(props: SingleCodeTabProps) {
       onLastSavedSingle(payload);
     }
   };
+
+  useEffect(() => {
+    generateSingle();
+  }, [refreshToken]);
 
   const Left = (
     <Card className="h-full flex flex-col">

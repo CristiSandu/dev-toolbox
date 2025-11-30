@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ResizablePanelGroup,
   ResizablePanel,
@@ -42,6 +42,7 @@ interface MultiCodeTabProps {
   multiType: CodeType;
   multiMode: MultiInputMode;
   lastSavedMulti: HistoryPayload | null;
+  refreshToken: number;
   onChangeText: (value: string) => void;
   onChangeType: (value: CodeType) => void;
   onChangeMode: (value: MultiInputMode) => void;
@@ -61,12 +62,17 @@ export function MultiCodeTab(props: MultiCodeTabProps) {
     multiType,
     multiMode,
     lastSavedMulti,
+    refreshToken,
     onChangeText,
     onChangeType,
     onChangeMode,
     onSaveHistory,
     onLastSavedMulti,
   } = props;
+
+  useEffect(() => {
+    generateMulti();
+  }, [refreshToken]);
 
   const [results, setResults] = useState<MultiResult[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
