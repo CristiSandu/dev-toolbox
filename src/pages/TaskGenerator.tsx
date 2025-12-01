@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Copy, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import { Task } from "@/lib/types/task";
 
@@ -71,8 +71,6 @@ export default function TaskGenerator() {
     resetForm();
     await loadTasks();
   };
-
-  const copyToClipboard = (text: string) => navigator.clipboard.writeText(text);
 
   // Filtering
   const filteredTasks = tasks
