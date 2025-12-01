@@ -2,7 +2,7 @@
 
 Dev Toolbox is a desktop helper application built with **Tauri + React** that bundles a set of small productivity tools for developers.
 
-Current tools include:
+Current tools include :
 
 - **Task / Branch / PR helper**
   - Store tasks in a local SQLite database.
