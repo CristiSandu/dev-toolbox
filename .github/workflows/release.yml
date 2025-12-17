@@ -22,6 +22,15 @@ jobs:
           ref: main
           fetch-depth: 0
 
+      - name: Prefer Git Bash over WSL
+        shell: pwsh
+        run: |
+          $gitBashDir = "C:\Program Files\Git\bin"
+          if (!(Test-Path "$gitBashDir\bash.exe")) {
+            throw "Git Bash not found at $gitBashDir. Install Git for Windows."
+          }
+          "PATH=$gitBashDir;$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
       # -----------------------------------
       # 1. Setup Rust + Node
       # -----------------------------------
