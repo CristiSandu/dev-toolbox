@@ -23,7 +23,7 @@ jobs:
           fetch-depth: 0
 
       - name: Prefer Git Bash over WSL
-        shell: pwsh
+        shell: powershell
         run: |
           $gitBashDir = "C:\Program Files\Git\bin"
           if (!(Test-Path "$gitBashDir\bash.exe")) {
@@ -51,9 +51,11 @@ jobs:
       # -----------------------------------
       - name: Bump version
         id: bump
+        shell: powershell
         run: |
           npm version patch --no-git-tag-version
-          echo "version=$(node -p "require('./package.json').version")" >> $env:GITHUB_OUTPUT
+          $version = node -p "require('./package.json').version"
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
 
       # Commit the version bump
       - name: Commit version bump
