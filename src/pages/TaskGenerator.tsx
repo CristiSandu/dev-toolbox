@@ -157,9 +157,8 @@ export default function TaskGenerator() {
         return; // User cancelled
       }
 
-      const path = typeof filePath === "string" ? filePath : filePath.path;
       const count = await invoke<number>("import_tasks", {
-        filePath: path,
+        filePath: filePath,
       });
 
       toast("Tasks imported successfully", {
