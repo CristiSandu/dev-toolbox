@@ -136,9 +136,8 @@ export function CodegenHistory({
         return; // User cancelled
       }
 
-      const path = typeof filePath === "string" ? filePath : filePath.path;
       const count = await invoke<number>("import_codegen_history", {
-        filePath: path,
+        filePath: filePath,
       });
 
       toast("History imported successfully", {
