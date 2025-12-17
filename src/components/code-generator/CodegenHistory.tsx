@@ -4,9 +4,16 @@ import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { History as HistoryIcon, RefreshCw, Trash2 } from "lucide-react";
+import {
+  History as HistoryIcon,
+  RefreshCw,
+  Trash2,
+  Download,
+  Upload,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { invoke } from "@tauri-apps/api/core";
+import { save, open } from "@tauri-apps/plugin-dialog";
 import { toast } from "sonner";
 import { HistoryPayload } from "@/components/code-generator/codegen-types";
 
@@ -87,6 +94,65 @@ export function CodegenHistory({
     }
   };
 
+  const exportHistory = async () => {
+    try {
+      const filePath = await save({
+        filters: [
+          {
+            name: "JSON",
+            extensions: ["json"],
+          },
+        ],
+        defaultPath: `codegen-history-${new Date().toISOString().split("T")[0]}.json`,
+      });
+
+      if (!filePath) {
+        return; // User cancelled
+      }
+
+      await invoke("export_codegen_history", { filePath });
+      toast("History exported successfully", {
+        description: `Exported ${entries.length} entries`,
+      });
+    } catch (e) {
+      console.error("Failed to export history", e);
+      toast("Failed to export history", { description: String(e) });
+    }
+  };
+
+  const importHistory = async () => {
+    try {
+      const filePath = await open({
+        filters: [
+          {
+            name: "JSON",
+            extensions: ["json"],
+          },
+        ],
+        multiple: false,
+      });
+
+      if (!filePath) {
+        return; // User cancelled
+      }
+
+      const path = typeof filePath === "string" ? filePath : filePath.path;
+      const count = await invoke<number>("import_codegen_history", {
+        filePath: path,
+      });
+
+      toast("History imported successfully", {
+        description: `Imported ${count} entries`,
+      });
+
+      // Refresh the history list
+      await refreshHistory();
+    } catch (e) {
+      console.error("Failed to import history", e);
+      toast("Failed to import history", { description: String(e) });
+    }
+  };
+
   // reload whenever parent bumps refreshToken
   useEffect(() => {
     void refreshHistory();
@@ -127,7 +193,26 @@ export function CodegenHistory({
             size="icon"
             variant="outline"
             className="h-8 w-8"
+            onClick={() => void exportHistory()}
+            title="Export history"
+          >
+            <Download size={14} />
+          </Button>
+          <Button
+            size="icon"
+            variant="outline"
+            className="h-8 w-8"
+            onClick={() => void importHistory()}
+            title="Import history"
+          >
+            <Upload size={14} />
+          </Button>
+          <Button
+            size="icon"
+            variant="outline"
+            className="h-8 w-8"
             onClick={() => void refreshHistory()}
+            title="Refresh"
           >
             <RefreshCw size={14} />
           </Button>

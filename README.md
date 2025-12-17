@@ -13,6 +13,7 @@ A comprehensive task management tool for developers working with Git workflows:
 - **Sort tasks** by creation date (newest/oldest)
 - **Delete tasks** from the database
 - **View task details** in read-only mode
+- **Export/Import tasks** - Export all tasks to JSON file or import tasks from a previously exported JSON file
 - Responsive design with resizable panels for desktop and stacked layout for mobile
 
 ### 2. XAML Formatter
@@ -45,6 +46,7 @@ A versatile barcode and QR code generation tool:
   - View-only JSON payload preview
   - Duplicate past states back into the editor
   - Delete history entries
+  - **Export/Import history** - Export all history entries to JSON file or import history from a previously exported JSON file
 - Adjustable preview size for better readability
 
 The app is designed as a personal, offline‑first toolbox that runs as a native desktop app using Tauri's lightweight Rust backend.
@@ -66,12 +68,14 @@ The app is designed as a personal, offline‑first toolbox that runs as a native
   - `qr-code-styling` for QR code styling
   - `@barcode-bakery/barcode-datamatrix` for DataMatrix
 - `@tauri-apps/api` for invoking Rust commands
+- `@tauri-apps/plugin-dialog` for file save/open dialogs
 - `vkbeautify` for XML/XAML formatting
 
 ### Backend (Tauri)
 - **Rust** (2021 edition)
 - **Tauri 2** framework
 - **rusqlite** (with bundled feature) for local SQLite databases
+- **tauri-plugin-dialog** for file dialog functionality
 - **Barcode Generation**:
   - `quickcodes` for QR Code & EAN‑13 generation
   - `datamatrix` crate for DataMatrix generation
@@ -228,15 +232,65 @@ CREATE TABLE IF NOT EXISTS codegen_history (
 - `get_tasks()` - Retrieve all tasks (sorted by creation date)
 - `delete_task(id)` - Delete a task by ID
 - `get_last_task()` - Get the most recently created task
+- `export_tasks(file_path)` - Export all tasks to a JSON file
+- `import_tasks(file_path)` - Import tasks from a JSON file (returns count of imported tasks)
 
 **Code Generator History:**
 - `save_codegen_state(mode, summary, payload)` - Save a generation state
 - `get_codegen_history()` - Retrieve all history entries
 - `delete_codegen_entry(id)` - Delete a history entry by ID
+- `export_codegen_history(file_path)` - Export all history entries to a JSON file
+- `import_codegen_history(file_path)` - Import history entries from a JSON file (returns count of imported entries)
 
 The React components consume these commands through `@tauri-apps/api/core`'s `invoke` function.
 
 > **Note**: The database file is stored in the Tauri app data directory (platform-specific). During development, you can safely delete the database file while the app is closed to start with a clean slate. The tables will be recreated automatically on the next run.
+
+### Export/Import Format
+
+Both tasks and code generation history can be exported to and imported from JSON files. The export format includes:
+
+**Tasks Export:**
+```json
+{
+  "tasks": [
+    {
+      "id": 1,
+      "name": "Task name",
+      "number": "TASK-123",
+      "feature_type": "feature",
+      "branch": "feature/TASK-123-task-name",
+      "pr_title": "TASK-123: Task name",
+      "created_at": "2024-01-01T12:00:00Z"
+    }
+  ],
+  "export_date": "2024-01-01T12:00:00Z",
+  "version": "1.0"
+}
+```
+
+**Code Generation History Export:**
+```json
+{
+  "entries": [
+    {
+      "id": 1,
+      "mode": "single",
+      "summary": "QR Code for...",
+      "payload": "{\"mode\":\"single\",\"singleText\":\"...\",\"singleType\":\"QR Code\"}",
+      "created_at": "2024-01-01T12:00:00Z"
+    }
+  ],
+  "export_date": "2024-01-01T12:00:00Z",
+  "version": "1.0"
+}
+```
+
+When importing, the original timestamps are preserved, and new database IDs are automatically assigned. This allows you to:
+- **Backup your data** before making changes
+- **Transfer data** between different installations
+- **Share task lists** or code generation templates with team members
+- **Restore** from a previous backup
 
 ---
 
@@ -293,8 +347,25 @@ The **History** tab in the Code Generator provides:
   - Complete JSON payload (pretty‑printed, view‑only)
   - **Duplicate button** to load the state back into the editor
   - **Delete button** to remove the entry from history
+- **Export/Import buttons** in the header:
+  - **Export** - Save all history entries to a JSON file
+  - **Import** - Load history entries from a JSON file
 - Long payloads are displayed in a scrollable container to prevent layout issues
 - History persists across app restarts in the SQLite database
+
+---
+
+## Permissions & Security
+
+The app uses Tauri's permission system to control access to system resources. The required permissions are defined in `src-tauri/capabilities/default.json`:
+
+- **core:default** - Basic Tauri core functionality
+- **opener:default** - Open external URLs/files
+- **dialog:allow-save** - Save file dialogs (for export functionality)
+- **dialog:allow-open** - Open file dialogs (for import functionality)
+- **dialog:default** - Default dialog functionality
+
+These permissions are automatically granted to the main window. If you need to add additional capabilities, you can modify the capabilities file and restart the app.
 
 ---
 
@@ -324,7 +395,7 @@ Some possible future additions:
   - Base64 encoder/decoder
   - Color picker/converter
 - **History Management**:
-  - Export/import of history as JSON files
+  - ✅ Export/import of history as JSON files (implemented)
   - Bulk delete operations
   - History filtering by date range
 - **Settings & Customization**:
@@ -339,7 +410,7 @@ Some possible future additions:
 - **Task Generator**:
   - Task templates
   - Task categories/tags
-  - Export tasks to CSV/JSON
+  - ✅ Export tasks to JSON (implemented)
 
 ---
 

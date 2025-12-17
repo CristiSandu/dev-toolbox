@@ -13,8 +13,10 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Download, Upload } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
+import { save, open } from "@tauri-apps/plugin-dialog";
+import { toast } from "sonner";
 import { Task } from "@/lib/types/task";
 
 import {
@@ -110,6 +112,65 @@ export default function TaskGenerator() {
       // setTasks((prev) => prev.filter((t) => t.id !== id));
     } catch (e) {
       console.error("Failed to delete task", e);
+    }
+  };
+
+  const exportTasks = async () => {
+    try {
+      const filePath = await save({
+        filters: [
+          {
+            name: "JSON",
+            extensions: ["json"],
+          },
+        ],
+        defaultPath: `tasks-${new Date().toISOString().split("T")[0]}.json`,
+      });
+
+      if (!filePath) {
+        return; // User cancelled
+      }
+
+      await invoke("export_tasks", { filePath });
+      toast("Tasks exported successfully", {
+        description: `Exported ${tasks.length} tasks`,
+      });
+    } catch (e) {
+      console.error("Failed to export tasks", e);
+      toast("Failed to export tasks", { description: String(e) });
+    }
+  };
+
+  const importTasks = async () => {
+    try {
+      const filePath = await open({
+        filters: [
+          {
+            name: "JSON",
+            extensions: ["json"],
+          },
+        ],
+        multiple: false,
+      });
+
+      if (!filePath) {
+        return; // User cancelled
+      }
+
+      const path = typeof filePath === "string" ? filePath : filePath.path;
+      const count = await invoke<number>("import_tasks", {
+        filePath: path,
+      });
+
+      toast("Tasks imported successfully", {
+        description: `Imported ${count} tasks`,
+      });
+
+      // Reload tasks from DB
+      await loadTasks();
+    } catch (e) {
+      console.error("Failed to import tasks", e);
+      toast("Failed to import tasks", { description: String(e) });
     }
   };
 
@@ -213,6 +274,24 @@ export default function TaskGenerator() {
               <SelectItem value="asc">Oldest</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+
+        {/* Export/Import */}
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => void exportTasks()}
+            className="flex gap-2 items-center"
+          >
+            <Download size={16} /> Export
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => void importTasks()}
+            className="flex gap-2 items-center"
+          >
+            <Upload size={16} /> Import
+          </Button>
         </div>
 
         <Button
