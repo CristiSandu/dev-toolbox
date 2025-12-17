@@ -1,82 +1,146 @@
 # Dev Toolbox
 
-Dev Toolbox is a desktop helper application built with **Tauri + React** that bundles a set of small productivity tools for developers.
+Dev Toolbox is a desktop helper application built with **Tauri 2 + React 19** that bundles a set of small productivity tools for developers.
 
-Current tools include :
+## Current Tools
 
-- **Task / Branch / PR helper**
-  - Store tasks in a local SQLite database.
-  - Generate consistent Git branch names and PR titles from task metadata.
-  - View the history of created tasks.
-- **XML Formatter**
-  - format and fix xml soap response
-- **Barcode & QR Code generator**
-  - Generate **QR Code**, **EAN‑13**, **DataMatrix** and **Code128** barcodes.
-  - Export to **SVG** or **PNG**.
-  - Adjustable on‑screen preview size for better readability.
-  - **Single** mode (one code at a time) and **Multi** mode (batch generation).
-  - Multi mode supports:
-    - One value per line, with a shared code type.
-    - JSON list with individual `text` + `type` per item.
-  - Local **history** of generation actions stored in SQLite, with:
-    - Searchable list of entries.
-    - View‑only payload preview.
-    - Duplicate a past state back into the editor.
-    - Delete history entries.
+### 1. Task Generator
+A comprehensive task management tool for developers working with Git workflows:
+- **Store tasks** in a local SQLite database
+- **Generate consistent Git branch names** from task metadata (supports `feature`, `bugfix`, `hotfix` types)
+- **Generate PR titles** automatically from task number and name
+- **View task history** with search and filter capabilities
+- **Sort tasks** by creation date (newest/oldest)
+- **Delete tasks** from the database
+- **View task details** in read-only mode
+- Responsive design with resizable panels for desktop and stacked layout for mobile
 
-The app is designed as a personal, offline‑first toolbox that runs as a native desktop app using Tauri’s lightweight Rust backend.
+### 2. XAML Formatter
+A powerful XAML/XML formatting tool with syntax highlighting:
+- **Format XAML/XML** code with proper indentation
+- **Ace Editor** integration with syntax highlighting (Monokai theme)
+- **Split-view editor** with input and output panels
+- **Keyboard shortcuts**:
+  - `Ctrl+Shift+F` - Format the code
+  - `Ctrl+F` - Open search in editor
+- **Resizable panels** for desktop, stacked layout for mobile
+- Built with `vkbeautify` for XML formatting
+
+### 3. Code Generator (Barcode & QR Code)
+A versatile barcode and QR code generation tool:
+- **Supported code types**:
+  - **QR Code** - Standard QR codes
+  - **EAN-13** - European Article Number with automatic check digit calculation
+  - **DataMatrix** - 2D barcode format
+  - **Code128** - Linear barcode format
+- **Export formats**: SVG and PNG
+- **Two generation modes**:
+  - **Single mode**: Generate one code at a time
+  - **Multi mode**: Batch generation with two input formats:
+    - **Lines mode**: One value per line, shared code type
+    - **JSON mode**: JSON array with individual `text` + `type` per item
+- **History management**:
+  - Local SQLite storage of all generation actions
+  - Searchable history list
+  - View-only JSON payload preview
+  - Duplicate past states back into the editor
+  - Delete history entries
+- Adjustable preview size for better readability
+
+The app is designed as a personal, offline‑first toolbox that runs as a native desktop app using Tauri's lightweight Rust backend.
 
 ---
 
-## Tech stack
+## Tech Stack
 
-- **Frontend**
-  - React + TypeScript
-  - Tauri React template
-  - Tailwind CSS & shadcn/ui components
-  - `@tauri-apps/api` for invoking Rust commands
-- **Backend (Tauri)**
-  - Rust
-  - `rusqlite` for local SQLite databases
-  - `quickcodes` for QR & EAN‑13 generation
+### Frontend
+- **React 19** + **TypeScript**
+- **Tauri 2** React template
+- **Tailwind CSS 4** & **shadcn/ui** components
+- **React Router DOM** for navigation
+- **Ace Editor** (react-ace) for code editing
+- **Sonner** for toast notifications
+- **Lucide React** for icons
+- **Barcode Libraries**:
+  - `jsbarcode` for Code128 generation
+  - `qr-code-styling` for QR code styling
+  - `@barcode-bakery/barcode-datamatrix` for DataMatrix
+- `@tauri-apps/api` for invoking Rust commands
+- `vkbeautify` for XML/XAML formatting
+
+### Backend (Tauri)
+- **Rust** (2021 edition)
+- **Tauri 2** framework
+- **rusqlite** (with bundled feature) for local SQLite databases
+- **Barcode Generation**:
+  - `quickcodes` for QR Code & EAN‑13 generation
   - `datamatrix` crate for DataMatrix generation
-  - `barcoders` crate for Code128
-  - Custom modules:
-    - `db.rs` – SQLite connection + migration helpers
-    - `tasks.rs` (or similar) – task save/load commands
-    - `barcodes.rs` – barcode generation logic
-    - `codegen_history.rs` – history persistence for the code generator
+  - `barcoders` crate for Code128 (with SVG and image features)
+- **Utilities**:
+  - `serde` & `serde_json` for serialization
+  - `chrono` for timestamp handling
+  - `base64` for image encoding
+  - `urlencoding` for URL encoding
+- **Custom Modules**:
+  - `db.rs` – SQLite connection + table creation helpers
+  - `commands.rs` – Task save/load/delete commands
+  - `barcodes.rs` – Barcode generation logic (all formats)
+  - `codegen_history.rs` – History persistence for the code generator
 
 ---
 
-## Project structure (high‑level)
+## Project Structure
 
 ```text
 dev-toolbox/
-├─ src/                      # React frontend
+├─ src/                          # React frontend
 │  ├─ components/
-│  │  ├─ code-generator/     # Code generator UI & types
-│  │  │  ├─ CodeGenerator.tsx
-│  │  │  ├─ CodegenHistory.tsx
-│  │  │  └─ codegen-types.ts
-│  │  └─ ...                 # Other shared components
+│  │  ├─ code-generator/         # Code generator UI & types
+│  │  │  ├─ CodegenHistory.tsx   # History view component
+│  │  │  ├─ MultiCodeTab.tsx     # Multi-mode generation tab
+│  │  │  ├─ SingleCodeTab.tsx    # Single-mode generation tab
+│  │  │  └─ codegen-types.ts     # TypeScript types
+│  │  ├─ ui/                     # shadcn/ui components
+│  │  │  ├─ button.tsx
+│  │  │  ├─ card.tsx
+│  │  │  ├─ dialog.tsx
+│  │  │  ├─ input.tsx
+│  │  │  ├─ sidebar.tsx
+│  │  │  └─ ...                  # Other UI components
+│  │  ├─ app-sidebar.tsx         # Main navigation sidebar
+│  │  ├─ app-header.tsx          # App header component
+│  │  ├─ animated-copy-button.tsx
+│  │  └─ animated-action-button.tsx
+│  ├─ pages/
+│  │  ├─ CodeGenerator.tsx       # Code generator page
+│  │  ├─ TaskGenerator.tsx       # Task generator page
+│  │  └─ XamlFormatter.tsx       # XAML formatter page
 │  ├─ hooks/
-│  │  └─ use-barcode.ts      # Hook that wraps Tauri barcode command
-│  └─ ...
+│  │  ├─ use-barcode.ts          # Hook that wraps Tauri barcode command
+│  │  └─ use-mobile.ts           # Mobile detection hook
+│  ├─ lib/
+│  │  ├─ types/
+│  │  │  └─ task.ts              # Task type definitions
+│  │  ├─ barcode-utils.ts        # Barcode utility functions
+│  │  └─ utils.ts                # General utilities
+│  ├─ App.tsx                    # Main app component
+│  ├─ router.tsx                  # React Router configuration
+│  └─ main.tsx                   # React entry point
 ├─ src-tauri/
 │  ├─ src/
-│  │  ├─ main.rs
-│  │  ├─ barcodes.rs         # generate_barcode Tauri command
-│  │  ├─ db.rs               # get_db() and DB path helpers
-│  │  ├─ tasks.rs            # save_task / get_tasks
-│  │  ├─ codegen_history.rs  # save_codegen_state / get_codegen_history / delete
-│  │  └─ ...
-│  ├─ Cargo.toml
-│  └─ tauri.conf.json
-└─ package.json
+│  │  ├─ main.rs                 # Tauri entry point
+│  │  ├─ lib.rs                  # Library root with command handlers
+│  │  ├─ barcodes.rs             # generate_barcode Tauri command
+│  │  ├─ db.rs                   # get_db() and table creation
+│  │  ├─ commands.rs             # save_task / get_tasks / delete_task
+│  │  └─ codegen_history.rs      # save_codegen_state / get_codegen_history / delete
+│  ├─ Cargo.toml                 # Rust dependencies
+│  ├─ tauri.conf.json            # Tauri configuration
+│  └─ tasks.db                   # SQLite database (created at runtime)
+├─ package.json                  # Node.js dependencies
+├─ tsconfig.json                 # TypeScript configuration
+└─ vite.config.ts                # Vite configuration
 ```
-
-_(File names may differ slightly depending on how you organized the modules, but the idea is the same.)_
 
 ---
 
@@ -86,7 +150,10 @@ _(File names may differ slightly depending on how you organized the modules, but
 
 - **Node.js** (18+ recommended)
 - **Rust** (stable toolchain installed via `rustup`)
-- Tauri prerequisites for your OS (see the official Tauri docs).
+- Tauri prerequisites for your OS:
+  - **macOS**: Xcode Command Line Tools
+  - **Windows**: Microsoft Visual C++ Build Tools
+  - **Linux**: System dependencies (see [Tauri prerequisites](https://tauri.app/v1/guides/getting-started/prerequisites))
 
 ### Install dependencies
 
@@ -120,13 +187,15 @@ This produces native binaries / installers in `src-tauri/target/release/` accord
 
 ---
 
-## Databases & persistence
+## Databases & Persistence
 
-The app uses **local SQLite** files, created on first use.
+The app uses a **single local SQLite database** (`tasks.db`) stored in the Tauri app data directory, created automatically on first use. Both the tasks and code generator history are stored in the same database file.
 
-### Task database
+### Database Schema
 
-Tasks are stored in a SQLite file (e.g. `tasks.db`) with a schema similar to:
+The database contains two tables:
+
+#### Tasks Table
 
 ```sql
 CREATE TABLE IF NOT EXISTS tasks (
@@ -140,106 +209,148 @@ CREATE TABLE IF NOT EXISTS tasks (
 );
 ```
 
-Rust side (simplified):
+#### Code Generator History Table
 
-```rust
-pub fn get_db() -> Result<Connection> {
-    let conn = Connection::open("tasks.db")?;
-    conn.execute(/* CREATE TABLE IF NOT EXISTS ... */, [])?;
-    Ok(conn)
-}
+```sql
+CREATE TABLE IF NOT EXISTS codegen_history (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  mode       TEXT NOT NULL,        -- 'single' or 'multi'
+  summary    TEXT NOT NULL,        -- short human-readable description
+  payload    TEXT NOT NULL,        -- JSON snapshot of state
+  created_at TEXT NOT NULL         -- ISO timestamp
+);
 ```
 
-### Code generator history database
+### Tauri Commands
 
-The code generator history uses a separate table (often in its own DB file) containing:
+**Task Management:**
+- `save_task(name, number, feature_type, branch, pr_title)` - Save a new task
+- `get_tasks()` - Retrieve all tasks (sorted by creation date)
+- `delete_task(id)` - Delete a task by ID
+- `get_last_task()` - Get the most recently created task
 
-- `id` – numeric primary key
-- `mode` – `"single"` or `"multi"`
-- `summary` – short human‑readable description
-- `payload` – JSON blob with the original state
-- `created_at` – ISO timestamp
+**Code Generator History:**
+- `save_codegen_state(mode, summary, payload)` - Save a generation state
+- `get_codegen_history()` - Retrieve all history entries
+- `delete_codegen_entry(id)` - Delete a history entry by ID
 
-Tauri commands exposed:
+The React components consume these commands through `@tauri-apps/api/core`'s `invoke` function.
 
-- `save_codegen_state(mode, summary, payload)`
-- `get_codegen_history()`
-- `delete_codegen_entry(id)`
-
-The React `CodegenHistory` component consumes these commands to display a searchable history list and a detailed payload viewer, and to load a past state back into the UI.
-
-> **Note**: During development, code changes in the Rust or React side may recreate or migrate the DB. For a clean slate, you can safely delete the local `.db` files while the app is closed.
+> **Note**: The database file is stored in the Tauri app data directory (platform-specific). During development, you can safely delete the database file while the app is closed to start with a clean slate. The tables will be recreated automatically on the next run.
 
 ---
 
-## Barcode generation details
+## Barcode Generation Details
 
 ### QR Code & EAN‑13
 
-Handled by [`quickcodes`](https://crates.io/crates/quickcodes):
+Handled by the [`quickcodes`](https://crates.io/crates/quickcodes) crate:
 
-- QR is generated directly from the input string.
-- EAN‑13 is _normalized_:
-  - If you enter 12 digits → the check digit is computed automatically.
-  - If you enter 13 digits → the check digit is verified; invalid numbers return an error.
+- **QR Code**: Generated directly from the input string, supports any text data
+- **EAN‑13**: Automatic check digit calculation and validation:
+  - If you enter **12 digits** → the check digit is computed automatically
+  - If you enter **13 digits** → the check digit is verified; invalid numbers return an error
+  - Only numeric input is accepted
 
 ### DataMatrix
 
 Handled by the [`datamatrix`](https://crates.io/crates/datamatrix) crate:
 
-- The Rust backend uses `DataMatrix::encode` and draws a crisp SVG manually, adding a quiet zone around the symbol for better scanning.
-- SVG is returned as a `data:image/svg+xml;utf8,...` URL to the frontend.
+- The Rust backend uses `DataMatrix::encode` to generate the symbol
+- A crisp SVG is drawn manually with proper quiet zone around the symbol for better scanning
+- SVG is returned as a `data:image/svg+xml;utf8,...` URL to the frontend
+- Supports various data sizes and error correction levels
 
 ### Code128
 
-Handled by [`barcoders`](https://crates.io/crates/barcoders):
+Handled by the [`barcoders`](https://crates.io/crates/barcoders) crate:
 
-- Backend uses `barcoders::sym::code128::Code128`.
-- Input is sanitized on the React side (only printable ASCII, without control characters) before being sent to Rust.
-- For PNG, bar width (`xdim`) and height are tuned to be easily scannable by mobile devices and hardware scanners.
-- For SVG, a fixed bar height is used; the React UI lets you scale the preview visually without distorting the bars in the exported image.
+- Backend uses `barcoders::sym::code128::Code128` for encoding
+- Input is sanitized on the React side (only printable ASCII, without control characters) before being sent to Rust
+- **PNG export**: Bar width (`xdim`) and height are tuned to be easily scannable by mobile devices and hardware scanners
+- **SVG export**: Fixed bar height is used; the React UI lets you scale the preview visually without distorting the bars in the exported image
+- Supports all Code128 character sets (A, B, C)
 
----
+### Export Formats
 
-## History view
-
-The **History** tab shows:
-
-- Left side: list of history entries (ID, mode, summary, timestamp).
-- Right side: details of the selected entry:
-  - Created date
-  - JSON payload (pretty‑printed, view‑only)
-  - Button to **duplicate** the state into the editor.
-  - Buttons to **delete** an entry.
-
-Long payloads are shown inside a scrollable `<pre>` block so they don’t break the layout.
+Both SVG and PNG formats are supported for all barcode types:
+- **SVG**: Vector format, scalable without quality loss
+- **PNG**: Raster format, optimized for printing and scanning
 
 ---
 
-## Error handling & debugging
+## Code Generator History View
 
-- Errors from the Rust backend are converted to strings and displayed in the UI.
-- For deeper debugging, you can run with backtraces enabled:
+The **History** tab in the Code Generator provides:
+
+- **Searchable list** of all history entries showing:
+  - Entry ID
+  - Generation mode (Single/Multi)
+  - Summary (truncated input text)
+  - Creation timestamp
+- **Detailed view** of the selected entry:
+  - Full creation date and time
+  - Complete JSON payload (pretty‑printed, view‑only)
+  - **Duplicate button** to load the state back into the editor
+  - **Delete button** to remove the entry from history
+- Long payloads are displayed in a scrollable container to prevent layout issues
+- History persists across app restarts in the SQLite database
+
+---
+
+## Error Handling & Debugging
+
+- **Error Display**: Errors from the Rust backend are converted to strings and displayed in the UI using toast notifications (Sonner)
+- **Debug Logging**: The backend uses `eprintln!` for debug logging in barcode generation and database operations; these logs appear in the terminal where you launched `cargo tauri dev`
+- **Backtraces**: For deeper debugging, you can run with backtraces enabled:
 
   ```bash
   RUST_BACKTRACE=1 cargo tauri dev
   ```
 
-- The backend uses `eprintln!` for debug logging in places like barcode generation and history persistence; these logs appear in the terminal where you launched `cargo tauri dev`.
+- **Frontend Errors**: React errors are logged to the browser console (accessible via DevTools)
+- **Database Errors**: SQLite errors are caught and converted to user-friendly error messages
 
 ---
 
-## Future ideas
+## Future Ideas
 
 Some possible future additions:
 
-- More helpers in the toolbox (e.g. JSON/YAML formatter, regex tester, UUID generator).
-- Export/import of history as JSON files.
-- Settings page (default barcode types, default branch/PR templates, theme tweaks).
-- Multi‑window support in Tauri (separate window for barcode generation vs. tasks).
+- **Additional Tools**:
+  - JSON/YAML formatter
+  - Regex tester
+  - UUID generator
+  - Base64 encoder/decoder
+  - Color picker/converter
+- **History Management**:
+  - Export/import of history as JSON files
+  - Bulk delete operations
+  - History filtering by date range
+- **Settings & Customization**:
+  - Settings page for default preferences
+  - Default barcode types
+  - Custom branch/PR templates
+  - Theme customization (dark/light mode toggle)
+- **UI Enhancements**:
+  - Multi‑window support in Tauri
+  - Keyboard shortcuts for all tools
+  - Drag-and-drop file support
+- **Task Generator**:
+  - Task templates
+  - Task categories/tags
+  - Export tasks to CSV/JSON
 
 ---
+
+## Version
+
+Current version: **0.1.5** (as specified in `package.json`)
 
 ## License
 
 Personal/internal project. If you plan to reuse parts of this codebase, consider adding a proper license (MIT/Apache‑2.0/etc.) that matches how you want others to use it.
+
+---
+
+**Built with ❤️ using Tauri 2 and React 19**
