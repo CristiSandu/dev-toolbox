@@ -1,6 +1,7 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
+use std::fs;
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct Task {
     pub id: i64,
     pub name: String,
@@ -107,4 +108,67 @@ pub fn get_last_task(app: tauri::AppHandle) -> Result<Option<Task>, String> {
         Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
         Err(e) => Err(e.to_string()),
     }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct TasksExport {
+    pub tasks: Vec<Task>,
+    pub export_date: String,
+    pub version: String,
+}
+
+#[tauri::command]
+pub async fn export_tasks(
+    app: tauri::AppHandle,
+    file_path: String,
+) -> Result<(), String> {
+    let tasks = get_tasks(app.clone())?;
+    
+    let export_data = TasksExport {
+        tasks,
+        export_date: chrono::Utc::now().to_rfc3339(),
+        version: "1.0".to_string(),
+    };
+
+    let json = serde_json::to_string_pretty(&export_data)
+        .map_err(|e| format!("Failed to serialize data: {}", e))?;
+
+    fs::write(&file_path, json)
+        .map_err(|e| format!("Failed to write file: {}", e))?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn import_tasks(
+    app: tauri::AppHandle,
+    file_path: String,
+) -> Result<usize, String> {
+    let json = fs::read_to_string(&file_path)
+        .map_err(|e| format!("Failed to read file: {}", e))?;
+
+    let export_data: TasksExport = serde_json::from_str(&json)
+        .map_err(|e| format!("Failed to parse JSON: {}", e))?;
+
+    let conn = crate::db::get_db(&app).map_err(|e| e.to_string())?;
+    let mut imported_count = 0;
+
+    for task in export_data.tasks {
+        conn.execute(
+            "INSERT INTO tasks (name, number, feature_type, branch, pr_title, created_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+            (
+                task.name,
+                task.number,
+                task.feature_type,
+                task.branch,
+                task.pr_title,
+                task.created_at,
+            ),
+        )
+        .map_err(|e| format!("Failed to import task: {}", e))?;
+        imported_count += 1;
+    }
+
+    Ok(imported_count)
 }

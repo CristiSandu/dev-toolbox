@@ -1,7 +1,8 @@
 use chrono::Utc;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
+use std::fs;
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct CodegenHistoryEntry {
     pub id: i64,
     pub mode: String,
@@ -68,4 +69,60 @@ pub fn delete_codegen_entry(app: tauri::AppHandle, id: i64) -> Result<(), String
     conn.execute("DELETE FROM codegen_history WHERE id = ?1", (id,))
         .map_err(|e| e.to_string())?;
     Ok(())
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct CodegenHistoryExport {
+    pub entries: Vec<CodegenHistoryEntry>,
+    pub export_date: String,
+    pub version: String,
+}
+
+#[tauri::command]
+pub async fn export_codegen_history(
+    app: tauri::AppHandle,
+    file_path: String,
+) -> Result<(), String> {
+    let entries = get_codegen_history(app.clone())?;
+    
+    let export_data = CodegenHistoryExport {
+        entries,
+        export_date: Utc::now().to_rfc3339(),
+        version: "1.0".to_string(),
+    };
+
+    let json = serde_json::to_string_pretty(&export_data)
+        .map_err(|e| format!("Failed to serialize data: {}", e))?;
+
+    fs::write(&file_path, json)
+        .map_err(|e| format!("Failed to write file: {}", e))?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn import_codegen_history(
+    app: tauri::AppHandle,
+    file_path: String,
+) -> Result<usize, String> {
+    let json = fs::read_to_string(&file_path)
+        .map_err(|e| format!("Failed to read file: {}", e))?;
+
+    let export_data: CodegenHistoryExport = serde_json::from_str(&json)
+        .map_err(|e| format!("Failed to parse JSON: {}", e))?;
+
+    let conn = crate::db::get_db(&app).map_err(|e| e.to_string())?;
+    let mut imported_count = 0;
+
+    for entry in export_data.entries {
+        conn.execute(
+            "INSERT INTO codegen_history (mode, summary, payload, created_at)
+             VALUES (?1, ?2, ?3, ?4)",
+            (entry.mode, entry.summary, entry.payload, entry.created_at),
+        )
+        .map_err(|e| format!("Failed to import entry: {}", e))?;
+        imported_count += 1;
+    }
+
+    Ok(imported_count)
 }
