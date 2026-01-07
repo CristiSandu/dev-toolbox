@@ -41,16 +41,38 @@ export const svgToPng = async (svgString: string): Promise<Blob> => {
 
 // ---------- data:URL helpers ----------
 export const dataUrlToSvgString = (dataUrl: string): string => {
-    const [, encoded] = dataUrl.split(",", 2);
+    if (!dataUrl || !dataUrl.includes(",")) return "";
+    
+    // Handle both formats: data:image/svg+xml;utf8,<encoded> and data:image/svg+xml,<encoded>
+    const parts = dataUrl.split(",");
+    if (parts.length < 2) return "";
+    
+    const encoded = parts.slice(1).join(","); // Join in case SVG contains commas
     if (!encoded) return "";
+    
     try {
+        // Decode URL-encoded SVG
         return decodeURIComponent(encoded);
-    } catch {
-        return "";
+    } catch (err) {
+        // If decoding fails, try returning as-is (might already be decoded)
+        console.warn("Failed to decode SVG data URL:", err);
+        return encoded;
     }
 };
 
+export const isPngDataUrl = (dataUrl: string): boolean => {
+    return dataUrl.startsWith("data:image/png;base64,");
+};
+
+export const isSvgDataUrl = (dataUrl: string): boolean => {
+    return dataUrl.startsWith("data:image/svg+xml");
+};
+
 export const copySvgFromDataUrl = async (dataUrl: string) => {
+    if (isPngDataUrl(dataUrl)) {
+        toast.error("Cannot copy SVG from PNG data. Please use SVG format.");
+        return;
+    }
     const svg = dataUrlToSvgString(dataUrl);
     if (!svg) return;
     await navigator.clipboard.writeText(svg);
@@ -58,6 +80,12 @@ export const copySvgFromDataUrl = async (dataUrl: string) => {
 };
 
 export const downloadSvgFromDataUrl = (dataUrl: string, filename?: string) => {
+    // Handle PNG data URLs - can't convert to SVG, so show error
+    if (isPngDataUrl(dataUrl)) {
+        toast.error("Cannot export PNG as SVG. Please generate with SVG format.");
+        return;
+    }
+
     const svg = dataUrlToSvgString(dataUrl);
     if (!svg) return;
 
@@ -77,6 +105,31 @@ export const downloadPngFromDataUrl = async (
     dataUrl: string,
     filename?: string
 ) => {
+    // Handle PNG data URLs directly
+    if (isPngDataUrl(dataUrl)) {
+        const [, base64] = dataUrl.split(",", 2);
+        if (!base64) return;
+
+        // Convert base64 to blob
+        const binaryString = atob(base64);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+        }
+        const blob = new Blob([bytes], { type: "image/png" });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${filename || "code"}.png`;
+        a.click();
+
+        URL.revokeObjectURL(url);
+        toast(`${filename || "code"}.png has been downloaded`);
+        return;
+    }
+
+    // Handle SVG data URLs - convert to PNG
     const svg = dataUrlToSvgString(dataUrl);
     if (!svg) return;
 

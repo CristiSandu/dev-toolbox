@@ -61,6 +61,7 @@ export function SingleCodeTab(props: SingleCodeTabProps) {
 
   const {
     src: singleSrc,
+    svgSrc: singleSvgSrc,
     error: singleError,
     generate: generateSingleBarcode,
   } = useBarcode();
@@ -187,9 +188,27 @@ export function SingleCodeTab(props: SingleCodeTabProps) {
 
             <div className="flex flex-wrap gap-2 justify-center">
               <AnimatedActionButton
-                onAction={() =>
-                  downloadSvgFromDataUrl(singleSrc, singleText || "code")
-                }
+                onAction={async () => {
+                  // For Code128, generate SVG on-demand if currently showing PNG
+                  if (singleType === "Code128" && singleSrc?.startsWith("data:image/png;base64,")) {
+                    const kind = CODE_TYPE_TO_KIND[singleType];
+                    try {
+                      const { invoke } = await import("@tauri-apps/api/core");
+                      const { sanitizeBarcodeInput } = await import("@/lib/utils");
+                      const result = await invoke<string>("generate_barcode", {
+                        kind,
+                        data: sanitizeBarcodeInput(singleText),
+                        format: "svg",
+                      });
+                      downloadSvgFromDataUrl(result, singleText || "code");
+                    } catch (e: any) {
+                      const { toast } = await import("sonner");
+                      toast.error(e?.toString() ?? "Failed to generate SVG");
+                    }
+                  } else {
+                    downloadSvgFromDataUrl(singleSrc!, singleText || "code");
+                  }
+                }}
                 label="SVG"
                 Icon={Download}
                 doneLabel="Saved"
@@ -197,7 +216,7 @@ export function SingleCodeTab(props: SingleCodeTabProps) {
 
               <AnimatedActionButton
                 onAction={() =>
-                  downloadPngFromDataUrl(singleSrc, singleText || "code")
+                  downloadPngFromDataUrl(singleSrc!, singleText || "code")
                 }
                 label="PNG"
                 Icon={Download}
@@ -205,7 +224,14 @@ export function SingleCodeTab(props: SingleCodeTabProps) {
               />
 
               <AnimatedActionButton
-                onAction={() => copySvgFromDataUrl(singleSrc)}
+                onAction={async () => {
+                  // For Code128, use pre-generated SVG if available
+                  if (singleType === "Code128" && singleSvgSrc) {
+                    await copySvgFromDataUrl(singleSvgSrc);
+                  } else {
+                    await copySvgFromDataUrl(singleSrc!);
+                  }
+                }}
                 label="Copy SVG"
                 Icon={Copy}
                 doneLabel="Copied"

@@ -15,6 +15,8 @@ import { invoke } from "@tauri-apps/api/core";
 import { toast } from "sonner";
 import {
   CODE_TYPES,
+  CODE_TYPE_TO_KIND,
+  CodeKind,
   CodeType,
   HistoryPayload,
   MultiInputMode,
@@ -54,6 +56,7 @@ interface MultiCodeTabProps {
 interface MultiResult {
   text: string;
   dataUrl: string;
+  svgDataUrl?: string; // Store SVG separately for Code128
   type: CodeType;
 }
 
@@ -113,8 +116,23 @@ export function MultiCodeTab(props: MultiCodeTabProps) {
             data: sanitizeBarcodeInput(item),
             format: format,
           });
+          
+          // For Code128, also generate SVG in the background for copying
+          let svgDataUrl: string | undefined;
+          if (multiType === "Code128") {
+            try {
+              svgDataUrl = await invoke<string>("generate_barcode", {
+                kind: kind,
+                data: sanitizeBarcodeInput(item),
+                format: "svg",
+              });
+            } catch (svgErr) {
+              // Silently fail - SVG is just for copying
+              console.warn("Failed to generate SVG for Code128:", svgErr);
+            }
+          }
 
-          newResults.push({ text: item, dataUrl, type: multiType });
+          newResults.push({ text: item, dataUrl, svgDataUrl, type: multiType });
         }
       } else {
         let parsed: unknown;
@@ -161,9 +179,25 @@ export function MultiCodeTab(props: MultiCodeTabProps) {
             format: formatForType(normalized.uiType),
           });
 
+          // For Code128, also generate SVG in the background for copying
+          let svgDataUrl: string | undefined;
+          if (normalized.uiType === "Code128") {
+            try {
+              svgDataUrl = await invoke<string>("generate_barcode", {
+                kind: normalized.kind,
+                data: sanitizeBarcodeInput(text),
+                format: "svg",
+              });
+            } catch (svgErr) {
+              // Silently fail - SVG is just for copying
+              console.warn("Failed to generate SVG for Code128:", svgErr);
+            }
+          }
+
           newResults.push({
             text,
             dataUrl,
+            svgDataUrl,
             type: normalized.uiType,
           });
         }
@@ -357,12 +391,25 @@ export function MultiCodeTab(props: MultiCodeTabProps) {
 
             <div className="flex flex-wrap gap-2 justify-center">
               <AnimatedActionButton
-                onAction={() =>
-                  downloadSvgFromDataUrl(
-                    results[selectedIndex].dataUrl,
-                    results[selectedIndex].text
-                  )
-                }
+                onAction={async () => {
+                  const result = results[selectedIndex];
+                  // For Code128, generate SVG on-demand if currently showing PNG
+                  if (result.type === "Code128" && result.dataUrl?.startsWith("data:image/png;base64,")) {
+                    const kind: CodeKind = CODE_TYPE_TO_KIND[result.type];
+                    try {
+                      const resultSvg = await invoke<string>("generate_barcode", {
+                        kind,
+                        data: sanitizeBarcodeInput(result.text),
+                        format: "svg",
+                      });
+                      downloadSvgFromDataUrl(resultSvg, result.text);
+                    } catch (e: any) {
+                      toast.error(e?.toString() ?? "Failed to generate SVG");
+                    }
+                  } else {
+                    downloadSvgFromDataUrl(result.dataUrl, result.text);
+                  }
+                }}
                 label="SVG"
                 Icon={Download}
                 doneLabel="Saved"
@@ -381,9 +428,15 @@ export function MultiCodeTab(props: MultiCodeTabProps) {
               />
 
               <AnimatedActionButton
-                onAction={() =>
-                  copySvgFromDataUrl(results[selectedIndex].dataUrl)
-                }
+                onAction={async () => {
+                  const result = results[selectedIndex];
+                  // For Code128, use pre-generated SVG if available
+                  if (result.type === "Code128" && result.svgDataUrl) {
+                    await copySvgFromDataUrl(result.svgDataUrl);
+                  } else {
+                    await copySvgFromDataUrl(result.dataUrl);
+                  }
+                }}
                 label="Copy SVG"
                 Icon={Copy}
                 doneLabel="Copied"
