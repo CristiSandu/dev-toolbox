@@ -177,9 +177,9 @@ export const getMultiPlaceholderLines = (type: CodeType): string => {
 };
 
 export const MULTI_JSON_PLACEHOLDER = `[
-  { "text": "https://example.com", "type": "QR Code" },
+  { "text": "https://example.com", "type": "QR Code", "description": "Example website" },
   { "text": "5901234123457", "type": "EAN-13" },
-  { "text": "(01)09501101530008(10)ABC123", "type": "Ean128" }
+  { "text": "(01)09501101530008(10)ABC123", "type": "Ean128", "description": "GS1 barcode" }
 ]`;
 
 // ---------- Image sizing ----------

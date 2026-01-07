@@ -9,7 +9,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Copy, Download, Search, X, Filter, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
+import { Copy, Download, Search, X, Filter, ArrowUp, ArrowDown, ArrowUpDown, MoreVertical } from "lucide-react";
 import { cn, sanitizeBarcodeInput } from "@/lib/utils";
 import { invoke } from "@tauri-apps/api/core";
 import { toast } from "sonner";
@@ -44,6 +44,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuCheckboxItem,
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -67,6 +68,7 @@ interface MultiResult {
   dataUrl: string;
   svgDataUrl?: string; // Store SVG separately for Code128
   type: CodeType;
+  description: string;
 }
 
 export function MultiCodeTab(props: MultiCodeTabProps) {
@@ -208,7 +210,7 @@ export function MultiCodeTab(props: MultiCodeTabProps) {
             }
           }
 
-          newResults.push({ text: item, dataUrl, svgDataUrl, type: multiType });
+          newResults.push({ text: item, dataUrl, svgDataUrl, type: multiType, description: "" });
         }
       } else {
         let parsed: unknown;
@@ -234,9 +236,10 @@ export function MultiCodeTab(props: MultiCodeTabProps) {
         for (const entry of parsed) {
           if (!entry || typeof entry !== "object") continue;
 
-          const anyEntry = entry as { text?: unknown; type?: unknown };
+          const anyEntry = entry as { text?: unknown; type?: unknown; description?: unknown };
           const text = String(anyEntry.text ?? "").trim();
           const typeRaw = String(anyEntry.type ?? "").trim();
+          const description = String(anyEntry.description ?? "").trim();
 
           if (!text || !typeRaw) continue;
 
@@ -275,6 +278,7 @@ export function MultiCodeTab(props: MultiCodeTabProps) {
             dataUrl,
             svgDataUrl,
             type: normalized.uiType,
+            description,
           });
         }
       }
@@ -376,7 +380,7 @@ export function MultiCodeTab(props: MultiCodeTabProps) {
           <p className="text-xs text-muted-foreground">
             JSON format: array of {"{"}
             text, type
-            {"}"} objects. Type can be:
+            {"}"} objects (optional <code>description</code> field). Type can be:
             <code>"QR Code"</code>, <code>"EAN-13"</code>,{" "}
             <code>"DataMatrix"</code>, <code>"Ean128"</code> or backend values{" "}
             <code>"qr"</code>, <code>"ean13"</code>, <code>"datamatrix"</code>,{" "}
@@ -518,7 +522,7 @@ export function MultiCodeTab(props: MultiCodeTabProps) {
                   key={originalIndex}
                   onClick={() => setSelectedIndex(originalIndex)}
                   className={cn(
-                    "p-2 border rounded cursor-pointer bg-card hover:bg-muted transition flex items-center gap-2",
+                    "group p-2 border rounded cursor-pointer bg-card hover:bg-muted transition flex items-center gap-2",
                     selectedIndex === originalIndex && "bg-muted"
                   )}
                 >
@@ -534,13 +538,86 @@ export function MultiCodeTab(props: MultiCodeTabProps) {
                       }}
                     />
                   </div>
-                  <div className="flex flex-col">
+                  <div className="flex flex-col flex-1 min-w-0">
                     <span className="truncate text-xs font-mono">
                       {highlightText(item.text, searchQuery)}
                     </span>
-                    <span className="text-[10px] text-muted-foreground">
-                      {highlightText(item.type, searchQuery)}
-                    </span>
+                    <div className="flex items-center justify-start gap-0.5">
+                      <span className="text-[10px] text-muted-foreground">
+                        {highlightText(item.type, searchQuery)}
+                      </span>
+                      {item.description && (
+                        <>
+                          <span className="mx-1 text-[10px] text-muted-foreground select-none">|</span>
+                          <span className="text-[10px] text-muted-foreground italic">
+                            {highlightText(item.description, searchQuery)}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <div 
+                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenuItem
+                          onClick={async () => {
+                            // For Code128, generate SVG on-demand if currently showing PNG
+                            if (item.type === "Code128" && item.dataUrl?.startsWith("data:image/png;base64,")) {
+                              const kind: CodeKind = CODE_TYPE_TO_KIND[item.type];
+                              try {
+                                const resultSvg = await invoke<string>("generate_barcode", {
+                                  kind,
+                                  data: sanitizeBarcodeInput(item.text),
+                                  format: "svg",
+                                });
+                                downloadSvgFromDataUrl(resultSvg, item.text);
+                              } catch (err: any) {
+                                toast.error(err?.toString() ?? "Failed to generate SVG");
+                              }
+                            } else {
+                              downloadSvgFromDataUrl(item.dataUrl, item.text);
+                            }
+                          }}
+                        >
+                          <Download className="h-4 w-4 mr-2" />
+                          Download SVG
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            downloadPngFromDataUrl(item.dataUrl, item.text);
+                          }}
+                        >
+                          <Download className="h-4 w-4 mr-2" />
+                          Download PNG
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={async () => {
+                            // For Code128, use pre-generated SVG if available
+                            if (item.type === "Code128" && item.svgDataUrl) {
+                              await copySvgFromDataUrl(item.svgDataUrl);
+                            } else {
+                              await copySvgFromDataUrl(item.dataUrl);
+                            }
+                          }}
+                        >
+                          <Copy className="h-4 w-4 mr-2" />
+                          Copy SVG
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
               ));
@@ -592,6 +669,12 @@ export function MultiCodeTab(props: MultiCodeTabProps) {
             <p className="text-sm text-muted-foreground break-all text-center">
               {results[selectedIndex].text}
             </p>
+
+            {results[selectedIndex].description && (
+              <p className="text-xs text-muted-foreground break-all text-center italic">
+                {results[selectedIndex].description}
+              </p>
+            )}
 
             <div className="flex flex-wrap gap-2 justify-center">
               <AnimatedActionButton
