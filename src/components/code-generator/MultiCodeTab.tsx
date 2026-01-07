@@ -355,16 +355,21 @@ export function MultiCodeTab(props: MultiCodeTabProps) {
           </div>
         </div>
 
-        <Textarea
-          className="min-h-[140px] font-mono text-xs"
-          placeholder={
-            multiMode === "json"
-              ? MULTI_JSON_PLACEHOLDER
-              : getMultiPlaceholderLines(multiType)
-          }
-          value={multiText}
-          onChange={(e) => onChangeText(e.target.value)}
-        />
+        <div className="relative">
+          <Textarea
+            className="min-h-[140px] font-mono text-xs"
+            placeholder={
+              multiMode === "json"
+                ? MULTI_JSON_PLACEHOLDER
+                : getMultiPlaceholderLines(multiType)
+            }
+            value={multiText}
+            onChange={(e) => onChangeText(e.target.value)}
+          />
+          <div className="absolute bottom-2 right-2 text-xs text-muted-foreground bg-background/80 px-1.5 py-0.5 rounded">
+            {multiText.length}
+          </div>
+        </div>
 
         <Button onClick={generateMulti}>Generate List</Button>
 
