@@ -100,12 +100,17 @@ export function SingleCodeTab(props: SingleCodeTabProps) {
       </CardHeader>
 
       <CardContent className="flex flex-col gap-4 border-t p-2">
-        <Textarea
-          className="min-h-[140px] font-mono text-xs"
-          placeholder={getSinglePlaceholder(singleType)}
-          value={singleText}
-          onChange={(e) => onChangeText(e.target.value)}
-        />
+        <div className="relative">
+          <Textarea
+            className="min-h-[140px] font-mono text-xs"
+            placeholder={getSinglePlaceholder(singleType)}
+            value={singleText}
+            onChange={(e) => onChangeText(e.target.value)}
+          />
+          <div className="absolute bottom-2 right-2 text-xs text-muted-foreground bg-background/80 px-1.5 py-0.5 rounded">
+            {singleText.length}
+          </div>
+        </div>
         <div className="flex w-full gap-2">
           <Button onClick={generateSingle} className="flex-1">
             Generate
