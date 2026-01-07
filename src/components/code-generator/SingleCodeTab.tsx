@@ -147,7 +147,7 @@ export function SingleCodeTab(props: SingleCodeTabProps) {
   );
 
   const Right = (
-    <Card className="h-full flex flex-col overflow-hidden bg-white">
+    <Card className="h-full flex flex-col overflow-hidden">
       <CardHeader className="flex items-center justify-between gap-4">
         <CardTitle>Preview</CardTitle>
         <div className="flex items-center gap-2">

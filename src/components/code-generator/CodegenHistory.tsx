@@ -175,7 +175,7 @@ export function CodegenHistory({
   // --- UI ---
 
   return (
-    <Card className="h-full flex flex-col bg-white">
+    <Card className="h-full flex flex-col">
       <CardHeader className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-2">
           <HistoryIcon size={18} />

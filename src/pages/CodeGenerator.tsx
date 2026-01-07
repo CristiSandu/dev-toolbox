@@ -15,7 +15,6 @@ import { SingleCodeTab } from "@/components/code-generator/SingleCodeTab";
 import { MultiCodeTab } from "@/components/code-generator/MultiCodeTab";
 import { CodegenHistory } from "@/components/code-generator/CodegenHistory";
 import { History } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 export default function CodeGenerator() {
@@ -98,10 +97,8 @@ export default function CodeGenerator() {
             <TabsTrigger value="multi">Multi</TabsTrigger>
           </TabsList>
           <Button
-            className={cn(
-              "flex gap-2 text-black hover:bg-accent shadow p-0",
-              selectedTab === "history" ? "bg-accent" : "bg-transparent"
-            )}
+            variant={selectedTab === "history" ? "secondary" : "ghost"}
+            className="flex gap-2"
             onClick={() => {
               setSelectedTab("history");
             }}

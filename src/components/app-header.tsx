@@ -3,6 +3,7 @@
 import { useLocation } from "react-router-dom";
 import { SidebarTrigger } from "@/components/ui/sidebar"; // <-- USE IT
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const TITLES: Record<string, string> = {
   "/task": "Task Generator",
@@ -29,6 +30,12 @@ export function AppHeader() {
 
       {/* Page Title */}
       <h1 className="text-xl font-semibold tracking-tight">{title}</h1>
+
+      {/* Spacer */}
+      <div className="flex-1" />
+
+      {/* Theme Toggle */}
+      <ThemeToggle />
     </header>
   );
 }

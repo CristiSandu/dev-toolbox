@@ -284,7 +284,7 @@ export function MultiCodeTab(props: MultiCodeTabProps) {
               key={i}
               onClick={() => setSelectedIndex(i)}
               className={cn(
-                "p-2 border rounded cursor-pointer bg-white hover:bg-muted transition flex items-center gap-2",
+                "p-2 border rounded cursor-pointer bg-card hover:bg-muted transition flex items-center gap-2",
                 selectedIndex === i && "bg-muted"
               )}
             >
@@ -314,7 +314,7 @@ export function MultiCodeTab(props: MultiCodeTabProps) {
   );
 
   const Right = (
-    <Card className="h-full flex flex-col overflow-hidden bg-white">
+    <Card className="h-full flex flex-col overflow-hidden">
       <CardHeader className="flex items-center justify-between gap-4">
         <CardTitle>Preview</CardTitle>
         <div className="flex items-center gap-2">
