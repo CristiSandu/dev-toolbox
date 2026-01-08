@@ -395,7 +395,7 @@ Some possible future additions:
   - Base64 encoder/decoder
   - Color picker/converter
 - **History Management**:
-  - ✅ Export/import of history as JSON files (implemented)
+  - Export/import of history as JSON files (implemented)
   - Bulk delete operations
   - History filtering by date range
 - **Settings & Customization**:
@@ -410,17 +410,13 @@ Some possible future additions:
 - **Task Generator**:
   - Task templates
   - Task categories/tags
-  - ✅ Export tasks to JSON (implemented)
+  - Export tasks to JSON (implemented)
 
 ---
 
-## Version
-
-Current version: **0.1.5** (as specified in `package.json`)
-
 ## License
 
-Personal/internal project. If you plan to reuse parts of this codebase, consider adding a proper license (MIT/Apache‑2.0/etc.) that matches how you want others to use it.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 

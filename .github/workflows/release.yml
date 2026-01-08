@@ -1,4 +1,4 @@
-name: Release - Windows version
+name: Release - Multi-platform
 
 on:
   pull_request:
@@ -10,10 +10,12 @@ permissions:
   contents: write # needed to push tags + create releases
 
 jobs:
-  release:
+  version:
     if: github.event.pull_request.merged == true
-    name: Build Windows Release
-    runs-on: self-hosted
+    name: Bump Version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.bump.outputs.version }}
 
     steps:
       - name: Checkout repository
@@ -22,17 +24,67 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Prefer Git Bash over WSL
-        shell: powershell
-        run: |
-          $gitBashDir = "C:\Program Files\Git\bin"
-          if (!(Test-Path "$gitBashDir\bash.exe")) {
-            throw "Git Bash not found at $gitBashDir. Install Git for Windows."
-          }
-          "PATH=$gitBashDir;$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
       # -----------------------------------
-      # 1. Setup Rust + Node
+      # Bump version automatically
+      # IMPORTANT: You can choose: patch | minor | major
+      # -----------------------------------
+      - name: Bump version
+        id: bump
+        run: |
+          # Bump version in package.json
+          npm version patch --no-git-tag-version
+          VERSION=$(node -p "require('./package.json').version")
+          
+          # Update version in Cargo.toml
+          sed -i "s/^version = \".*\"/version = \"$VERSION\"/" src-tauri/Cargo.toml
+          
+          # Update version in tauri.conf.json
+          sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" src-tauri/tauri.conf.json
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Updated version to $VERSION in package.json, Cargo.toml, and tauri.conf.json"
+
+      # Commit the version bump
+      - name: Commit version bump
+        run: |
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "GitHub Actions"
+          git add package.json src-tauri/Cargo.toml src-tauri/tauri.conf.json
+          git commit -m "chore: bump version to ${{ steps.bump.outputs.version }}"
+          git push
+
+      # -----------------------------------
+      # Create Git tag for release version
+      # -----------------------------------
+      - name: Create Git Tag
+        run: |
+          git tag v${{ steps.bump.outputs.version }}
+          git push origin v${{ steps.bump.outputs.version }}
+
+  build:
+    if: github.event.pull_request.merged == true
+    needs: version
+    name: Build ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      # -----------------------------------
+      # Setup Rust + Node
       # -----------------------------------
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -46,53 +98,62 @@ jobs:
         run: npm ci
 
       # -----------------------------------
-      # 2. Bump version automatically
-      # IMPORTANT: You can choose: patch | minor | major
-      # -----------------------------------
-      - name: Bump version
-        id: bump
-        shell: powershell
-        run: |
-          npm version patch --no-git-tag-version
-          $version = node -p "require('./package.json').version"
-          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
-
-      # Commit the version bump
-      - name: Commit version bump
-        run: |
-          git config --global user.email "github-actions@github.com"
-          git config --global user.name "GitHub Actions"
-          git commit -am "chore: bump version to ${{ steps.bump.outputs.version }}"
-          git push
-
-      # -----------------------------------
-      # 3. Create Git tag for release version
-      # -----------------------------------
-      - name: Create Git Tag
-        run: |
-          git tag v${{ steps.bump.outputs.version }}
-          git push origin v${{ steps.bump.outputs.version }}
-
-      # -----------------------------------
-      # 4. Build Tauri (Windows executable)
+      # Build Tauri App
       # -----------------------------------
       - name: Build Tauri App
         uses: tauri-apps/tauri-action@v0
-        with:
-          releaseId: v${{ steps.bump.outputs.version }}
 
       # -----------------------------------
-      # 5. Publish Release on GitHub
+      # Upload artifacts
       # -----------------------------------
+      - name: Upload Windows artifacts
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-release
+          path: |
+            src-tauri/target/release/bundle/msi/*.msi
+            src-tauri/target/release/bundle/nsis/*.exe
+          retention-days: 7
+
+      - name: Upload macOS artifacts
+        if: matrix.os == 'macos-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-release
+          path: |
+            src-tauri/target/release/bundle/dmg/*.dmg
+            src-tauri/target/release/bundle/macos/*.app
+          retention-days: 7
+
+  release:
+    if: github.event.pull_request.merged == true
+    needs: [version, build]
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-release
+          path: ./artifacts/windows
+
+      - name: Download macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-release
+          path: ./artifacts/macos
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.bump.outputs.version }}
-          name: "Release v${{ steps.bump.outputs.version }}"
+          tag_name: v${{ needs.version.outputs.version }}
+          name: "Release v${{ needs.version.outputs.version }}"
           draft: false
           prerelease: false
           files: |
-            src-tauri/target/release/bundle/msi/*.msi
-            src-tauri/target/release/bundle/nsis/*.exe
+            ./artifacts/windows/**/*
+            ./artifacts/macos/**/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
