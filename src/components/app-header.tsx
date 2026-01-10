@@ -10,6 +10,7 @@ const TITLES: Record<string, string> = {
   "/xaml": "XAML Formatter",
   "/diff": "Diff Viewer",
   "/codes": "Code Generator",
+  "/print": "Print Queue",
   "/": "Dev Toolbox",
 };
 

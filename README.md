@@ -146,6 +146,21 @@ The app is designed as a personal, offline‑first toolbox that runs as a native
   - `commands.rs` – Task save/load/delete commands
   - `barcodes.rs` – Barcode generation logic (all formats)
   - `codegen_history.rs` – History persistence for the code generator
+  - `print_queue.rs` – Local print queue storage and state management
+  - `server.rs` – Lightweight local HTTP endpoint for queuing print jobs (`/print`)
+
+### Print Queue endpoint
+
+- The app starts a small HTTP server on `0.0.0.0:3333` (override with env `PRINT_QUEUE_PORT`).
+- POST `http://<your-ip>:3333/print` with JSON:
+  ```json
+  { "batchId": "kitchen-1", "requestedBy": "alice", "payload": "line to print" }
+  ```
+  or multiple:
+  ```json
+  { "batchId": "run-42", "requestedBy": "alice", "jobs": ["ticket A", "ticket B"] }
+  ```
+- Each entry is stored with state `new` and can be sent/reprinted from the **Print Queue** page. The response echoes the queued jobs.
 
 ---
 

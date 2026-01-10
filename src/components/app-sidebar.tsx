@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/sidebar";
 
 import { Link, useLocation } from "react-router-dom";
-import { ClipboardList, Code, QrCode } from "lucide-react";
+import { ClipboardList, Code, Printer, QrCode } from "lucide-react";
 import logo from "../assets/app-icon.png";
 
 export function AppSidebar() {
@@ -24,6 +24,7 @@ export function AppSidebar() {
     { to: "/task", label: "Task Generator", icon: ClipboardList },
     { to: "/xaml", label: "XAML Formatter", icon: Code },
     { to: "/codes", label: "Code Generator", icon: QrCode },
+    { to: "/print", label: "Print Queue", icon: Printer },
   ];
 
   return (
