@@ -2,6 +2,62 @@
 
 Dev Toolbox is a desktop helper application built with **Tauri 2 + React 19** that bundles a set of small productivity tools for developers.
 
+---
+
+## Getting started
+
+### Prerequisites
+
+- **Node.js** (18+ recommended)
+- **Rust** (stable toolchain installed via `rustup`)
+- Tauri prerequisites for your OS:
+  - **macOS**: Xcode Command Line Tools
+  - **Windows**: Microsoft Visual C++ Build Tools
+  - **Linux**: System dependencies (see [Tauri prerequisites](https://tauri.app/v1/guides/getting-started/prerequisites))
+
+### Install dependencies
+
+From the project root:
+
+```bash
+# Install frontend / JS deps
+npm install
+
+# (Rust deps are handled by Cargo automatically on first build)
+```
+
+### Run in development
+
+```bash
+cargo tauri dev
+```
+
+This will:
+
+- Run `npm run dev` for the React frontend (`beforeDevCommand` in `tauri.conf.json`).
+- Start the Tauri shell and load the app from `http://localhost:1420`.
+
+### Build a release bundle
+
+```bash
+cargo tauri build
+```
+
+This produces native binaries / installers in `src-tauri/target/release/` according to your platform (DMG/APP for macOS, MSI/EXE for Windows, etc.).
+
+### Debug on macOS (quarantine)
+
+If macOS flags the app as coming from an unidentified developer:
+
+1. Locate the installed app bundle path (for example, `/Applications/Dev Toolbox.app` or `~/Applications/Dev Toolbox.app`).
+2. Remove the quarantine attribute so Gatekeeper stops blocking it:
+   ```bash
+   sudo xattr -r -d com.apple.quarantine "/Applications/Dev Toolbox.app"
+   ```
+3. Launch the app again and approve the prompt if macOS asks for confirmation.
+
+---
+
 ## Current Tools
 
 ### 1. Task Generator
@@ -145,49 +201,6 @@ dev-toolbox/
 ├─ tsconfig.json                 # TypeScript configuration
 └─ vite.config.ts                # Vite configuration
 ```
-
----
-
-## Getting started
-
-### Prerequisites
-
-- **Node.js** (18+ recommended)
-- **Rust** (stable toolchain installed via `rustup`)
-- Tauri prerequisites for your OS:
-  - **macOS**: Xcode Command Line Tools
-  - **Windows**: Microsoft Visual C++ Build Tools
-  - **Linux**: System dependencies (see [Tauri prerequisites](https://tauri.app/v1/guides/getting-started/prerequisites))
-
-### Install dependencies
-
-From the project root:
-
-```bash
-# Install frontend / JS deps
-npm install
-
-# (Rust deps are handled by Cargo automatically on first build)
-```
-
-### Run in development
-
-```bash
-cargo tauri dev
-```
-
-This will:
-
-- Run `npm run dev` for the React frontend (`beforeDevCommand` in `tauri.conf.json`).
-- Start the Tauri shell and load the app from `http://localhost:1420`.
-
-### Build a release bundle
-
-```bash
-cargo tauri build
-```
-
-This produces native binaries / installers in `src-tauri/target/release/` according to your platform (DMG/APP for macOS, MSI/EXE for Windows, etc.).
 
 ---
 
