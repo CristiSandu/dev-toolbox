@@ -1,0 +1,1 @@
+Dev Toolbox updater signature verification fixture. Not an installable archive.

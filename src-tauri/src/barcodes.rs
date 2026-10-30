@@ -21,6 +21,68 @@ pub enum CodeKind {
     Code128,
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn ean13_calculates_and_validates_known_check_digits() {
+        assert_eq!(normalize_ean13("400638133393").unwrap(), "4006381333931");
+        assert_eq!(normalize_ean13("4006381333931").unwrap(), "4006381333931");
+        assert_eq!(normalize_ean13("000000000000").unwrap(), "0000000000000");
+        for invalid in [
+            "",
+            "123",
+            "40063813339310",
+            "4006381333932",
+            "40063813339a",
+            "４００６３８１３３３９３",
+            "400638133393 ",
+        ] {
+            assert!(normalize_ean13(invalid).is_err(), "accepted {invalid:?}");
+        }
+    }
+
+    #[test]
+    fn code128_keeps_printable_ascii_and_handles_controls_and_unicode() {
+        assert_eq!(clean_for_code128("ABC\n\r\t123"), "ABC123");
+        assert_eq!(clean_for_code128("café"), "caf?");
+        assert_eq!(to_code128_data("ABC"), "\u{0181}ABC");
+    }
+
+    #[test]
+    fn barcode_outputs_are_svg_or_png_for_supported_formats() {
+        for (kind, data) in [
+            (CodeKind::Qr, "Hello"),
+            (CodeKind::Ean13, "400638133393"),
+            (CodeKind::Code128, "ABC123"),
+            (CodeKind::Datamatrix, "ABC123"),
+        ] {
+            let result = generate_barcode(kind, data.into(), ImageFormat::Svg).unwrap();
+            let svg = urlencoding::decode(result.strip_prefix("data:image/svg+xml;utf8,").unwrap())
+                .unwrap();
+            assert!(svg.contains("<svg"));
+            assert!(svg.contains("</svg>"));
+        }
+        for (kind, data) in [
+            (CodeKind::Qr, "Hello"),
+            (CodeKind::Ean13, "400638133393"),
+            (CodeKind::Code128, "ABC123"),
+        ] {
+            let result = generate_barcode(kind, data.into(), ImageFormat::Png).unwrap();
+            let bytes = BASE64_STANDARD
+                .decode(result.strip_prefix("data:image/png;base64,").unwrap())
+                .unwrap();
+            assert!(bytes.starts_with(b"\x89PNG\r\n\x1a\n"));
+        }
+    }
+
+    #[test]
+    fn unsupported_datamatrix_png_returns_an_error() {
+        assert!(generate_barcode(CodeKind::Datamatrix, "ABC123".into(), ImageFormat::Png).is_err());
+    }
+}
+
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ImageFormat {

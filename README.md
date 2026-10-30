@@ -8,12 +8,12 @@ Dev Toolbox is a desktop helper application built with **Tauri 2 + React 19** th
 
 ### Prerequisites
 
-- **Node.js** (18+ recommended)
+- **Node.js** (22.12+; Node 24 recommended)
 - **Rust** (stable toolchain installed via `rustup`)
 - Tauri prerequisites for your OS:
   - **macOS**: Xcode Command Line Tools
   - **Windows**: Microsoft Visual C++ Build Tools
-  - **Linux**: System dependencies (see [Tauri prerequisites](https://tauri.app/v1/guides/getting-started/prerequisites))
+  - **Linux**: System dependencies (see [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/))
 
 ### Install dependencies
 
@@ -21,7 +21,7 @@ From the project root:
 
 ```bash
 # Install frontend / JS deps
-npm install
+npm ci
 
 # (Rust deps are handled by Cargo automatically on first build)
 ```
@@ -29,8 +29,10 @@ npm install
 ### Run in development
 
 ```bash
-cargo tauri dev
+npm run tauri dev
 ```
+
+The npm script uses the project-local Tauri CLI; a separate `cargo-tauri` install is unnecessary.
 
 This will:
 
@@ -40,10 +42,25 @@ This will:
 ### Build a release bundle
 
 ```bash
-cargo tauri build
+npm run tauri build -- --config src-tauri/tauri.unsigned.conf.json
 ```
 
 This produces native binaries / installers in `src-tauri/target/release/` according to your platform (DMG/APP for macOS, MSI/EXE for Windows, etc.).
+
+### Tests and release process
+
+```bash
+npm run check:versions
+npm test
+npm run build
+cargo test --locked --manifest-path src-tauri/Cargo.toml
+```
+
+Pull requests validate Windows x64 and macOS Apple Silicon/Intel builds. Releases are intentional: update versions in a release PR, then tag its merged commit; CI builds a draft release after all targets pass. See [release and upgrade checks](docs/RELEASING.md), [baseline measurements](docs/BASELINES.md), and the [changelog](CHANGELOG.md).
+
+### In-app updates
+
+Use **About & updates** in the header to check for releases, review notes, and choose **Update and restart**. Packaged apps also notify when a background check finds a new version. Users on `0.1.9` need one manual installation of `0.2.0`. See [updater signing and release setup](docs/UPDATER.md) before publishing a release; ordinary contributor builds use the unsigned override above.
 
 ### Debug on macOS (quarantine)
 
@@ -119,10 +136,7 @@ The app is designed as a personal, offline‑first toolbox that runs as a native
 - **Ace Editor** (react-ace) for code editing
 - **Sonner** for toast notifications
 - **Lucide React** for icons
-- **Barcode Libraries**:
-  - `jsbarcode` for Code128 generation
-  - `qr-code-styling` for QR code styling
-  - `@barcode-bakery/barcode-datamatrix` for DataMatrix
+- Barcode generation runs in the Rust backend.
 - `@tauri-apps/api` for invoking Rust commands
 - `@tauri-apps/plugin-dialog` for file save/open dialogs
 - `vkbeautify` for XML/XAML formatting
@@ -385,11 +399,11 @@ These permissions are automatically granted to the main window. If you need to a
 ## Error Handling & Debugging
 
 - **Error Display**: Errors from the Rust backend are converted to strings and displayed in the UI using toast notifications (Sonner)
-- **Debug Logging**: The backend uses `eprintln!` for debug logging in barcode generation and database operations; these logs appear in the terminal where you launched `cargo tauri dev`
+- **Debug Logging**: The backend uses `eprintln!` for debug logging in barcode generation and database operations; these logs appear in the terminal where you launched `npm run tauri dev`
 - **Backtraces**: For deeper debugging, you can run with backtraces enabled:
 
   ```bash
-  RUST_BACKTRACE=1 cargo tauri dev
+  RUST_BACKTRACE=1 npm run tauri dev
   ```
 
 - **Frontend Errors**: React errors are logged to the browser console (accessible via DevTools)

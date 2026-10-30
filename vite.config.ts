@@ -1,9 +1,9 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from '@tailwindcss/vite'
-import path from "path";
+import path from "node:path";
 
-import { fileURLToPath } from "url";
+import { fileURLToPath } from "node:url";
 
 // Fix __dirname for ESM
 const __filename = fileURLToPath(import.meta.url);

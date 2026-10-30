@@ -1,0 +1,13 @@
+{
+  "tasks": [{
+    "id": 99,
+    "name": "Fix login & preserve café",
+    "number": "DEV-42",
+    "feature_type": "bugfix",
+    "branch": "bugfix/DEV-42-fix-login-preserve-caf-",
+    "pr_title": "DEV-42: Fix login & preserve café",
+    "created_at": "2024-01-01T12:00:00Z"
+  }],
+  "export_date": "2024-01-02T12:00:00Z",
+  "version": "1.0"
+}

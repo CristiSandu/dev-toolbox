@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import AceEditor from "react-ace";
-import vkbeautify from "vkbeautify";
+import { formatXml } from "@/lib/xml-formatting";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -22,7 +22,7 @@ export default function XamlFormatter() {
 
   const format = () => {
     try {
-      const pretty = vkbeautify.xml(input);
+      const pretty = formatXml(input);
       setOutput(pretty);
     } catch (err) {
       setOutput(`❌ Error formatting XAML: ${String(err)}`);
