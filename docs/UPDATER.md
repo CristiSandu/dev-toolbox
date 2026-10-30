@@ -78,6 +78,8 @@ Automated checks:
 - Native tests download a signed fixture, reject changed bytes, and reject a mismatched signed version. No installer is invoked by those tests.
 - Signed-build verification is an explicitly opt-in native test. CI supplies `UPDATER_SMOKE_DIRECTORY` and runs it with `--ignored`; regular test runs do not pretend to have generated installer artifacts.
 
+Windows MSVC integration-test executables embed `src-tauri/tests/windows-test.manifest` through test-only linker flags in `build.rs`. The Tauri mock runtime needs Common Controls v6; without that manifest, Windows can exit with `0xc0000139` before the test harness starts. This follows the [upstream Tauri test workaround](https://github.com/tauri-apps/tauri/issues/11028) and leaves the updater tests enabled.
+
 Before publishing `0.2.0`, complete a controlled `0.2.0 → 0.2.1` update on macOS and both Windows installer types, with populated tasks and code history. Test deferral, offline checks, failed downloads, and invalid signatures, using a dedicated OS profile/app identity. Verify relaunch, installed version, and database contents; a successful download alone does not prove installation. Record evidence and unverified targets in the M1 section of [BASELINES.md](BASELINES.md).
 
 The stable HTTPS endpoint cannot provide a real update until a complete release is published. GitHub secrets, remote CI, platform signing/notarization, and Windows/Intel upgrade verification remain external rollout gates where not yet recorded as passed.
