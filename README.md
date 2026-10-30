@@ -47,6 +47,17 @@ npm run tauri build
 
 This produces native binaries / installers in `src-tauri/target/release/` according to your platform (DMG/APP for macOS, MSI/EXE for Windows, etc.).
 
+### Tests and release process
+
+```bash
+npm run check:versions
+npm test
+npm run build
+cargo test --locked --manifest-path src-tauri/Cargo.toml
+```
+
+Pull requests validate Windows x64 and macOS Apple Silicon/Intel builds. Releases are intentional: update versions in a release PR, then tag its merged commit; CI builds a draft release after all targets pass. See [release and upgrade checks](docs/RELEASING.md), [baseline measurements](docs/BASELINES.md), and the [changelog](CHANGELOG.md).
+
 ### Debug on macOS (quarantine)
 
 If macOS flags the app as coming from an unidentified developer:

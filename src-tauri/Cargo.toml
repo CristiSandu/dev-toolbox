@@ -31,3 +31,6 @@ datamatrix = "0.3"
 base64 = "0.22"
 urlencoding = "2.1"
 barcoders = { version = "2", features = ["svg", "image"] }
+
+[dev-dependencies]
+tempfile = "3"

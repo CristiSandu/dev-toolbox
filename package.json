@@ -10,6 +10,10 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "test": "node --experimental-strip-types --test tests/*.test.mjs",
+    "check:versions": "node scripts/versions.mjs check",
+    "version:set": "node scripts/versions.mjs set",
+    "baseline:formatter": "node --experimental-strip-types scripts/benchmark-formatter.mjs",
     "preview": "vite preview",
     "tauri": "tauri"
   },

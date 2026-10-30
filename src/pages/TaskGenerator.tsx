@@ -18,6 +18,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { save, open } from "@tauri-apps/plugin-dialog";
 import { toast } from "sonner";
 import { Task } from "@/lib/types/task";
+import { generateTaskNames } from "@/lib/task-generation";
 
 import {
   ResizablePanelGroup,
@@ -33,9 +34,9 @@ export default function TaskGenerator() {
   const [branchType, setBranchType] = useState<string>("feature");
 
   // Generated previews
-  const normalizedName = taskName.toLowerCase().replace(/[^a-zA-Z0-9]+/g, "-");
-  const generatedBranch = `${branchType}/${taskNumber}-${normalizedName}`;
-  const generatedPR = `${taskNumber}: ${taskName}`;
+  const { branch: generatedBranch, prTitle: generatedPR } = generateTaskNames(
+    taskNumber, taskName, branchType,
+  );
 
   // Task list
   const [tasks, setTasks] = useState<Task[]>([]);
