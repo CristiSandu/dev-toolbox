@@ -1,0 +1,2 @@
+# Signature verification requires the exact bytes used when signing this fixture.
+/tests/fixtures/updater-payload.txt text eol=lf
