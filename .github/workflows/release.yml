@@ -27,7 +27,10 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
 
       # -----------------------------------
       # Bump version automatically
@@ -45,6 +48,9 @@ jobs:
           
           # Update version in tauri.conf.json
           sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" src-tauri/tauri.conf.json
+
+          # Keep the local Rust package version in sync in Cargo.lock.
+          cargo update --workspace --manifest-path src-tauri/Cargo.toml
           
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Updated version to $VERSION in package.json, Cargo.toml, and tauri.conf.json"
@@ -54,7 +60,7 @@ jobs:
         run: |
           git config --global user.email "github-actions@github.com"
           git config --global user.name "GitHub Actions"
-          git add package.json src-tauri/Cargo.toml src-tauri/tauri.conf.json
+          git add package.json package-lock.json src-tauri/Cargo.toml src-tauri/Cargo.lock src-tauri/tauri.conf.json
           git commit -m "chore: bump version to ${{ steps.bump.outputs.version }}"
           git push
 
@@ -80,7 +86,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: v${{ needs.version.outputs.version }}
           fetch-depth: 0
 
       # -----------------------------------
@@ -92,7 +98,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
 
       - name: Install frontend deps
         run: npm ci
