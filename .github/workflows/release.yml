@@ -14,6 +14,11 @@ concurrency:
 jobs:
   validate:
     uses: ./.github/workflows/validate.yml
+    with:
+      sign-updates: true
+    secrets:
+      TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+      TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
   release:
     needs: validate
@@ -21,11 +26,19 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
       - uses: actions/download-artifact@v4
         with:
           pattern: installers-*
           path: artifacts
           merge-multiple: true
+      - name: Assemble complete stable update manifest
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: node scripts/update-manifest.mjs merge artifacts
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
@@ -34,8 +47,15 @@ jobs:
           prerelease: false
           generate_release_notes: true
           fail_on_unmatched_files: true
-          files: artifacts/**/*
+          files: |
+            artifacts/*.dmg
+            artifacts/*.app.tar.gz
+            artifacts/*.sig
+            artifacts/*.exe
+            artifacts/*.msi
+            artifacts/latest.json
           body: |
-            Native builds and automated regression checks passed for all configured targets.
+            Native builds, regression checks, and updater signature verification passed for all configured targets.
             Complete docs/RELEASING.md, including installation and data-retention checks,
-            before publishing this draft. Platform signing and in-app updates follow in M1.
+            before publishing this draft. This release includes signed updater artifacts and latest.json.
+            Review platform signing/notarization and OS trust prompts before broad distribution.

@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 0.2.0 (unreleased)
+
+- Add About & updates with current version, explicit update checks, release notes, download progress, install/restart, and retry controls.
+- Notify once per app session when a background check finds an update; keep installation explicit and failed background checks quiet.
+- Use Tauri's updater signature verification, including signed-version binding, and retain the existing app identity and data directory.
+- Build signed updater packages and a complete stable-channel manifest for both macOS architectures and Windows MSI/NSIS. Verify generated artifacts with the native updater before release upload.
+- Require one manual installation for users upgrading from 0.1.9. Later compatible releases can install through the app.
+
 - Add focused regression tests for task names, XML/XAML formatting, barcode behavior, backup compatibility, and database retention across reopening.
 - Validate all application version declarations and lockfile entries; provide `npm run version:set -- X.Y.Z` for intentional stable releases.
 - Run native build/test validation for Windows x64 and macOS Apple Silicon/Intel on pull requests and `main`.

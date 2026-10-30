@@ -78,6 +78,8 @@ This is a planning review, not a full code audit. CI runs, signing credentials, 
 
 **User story:** I can check for an update and install it without finding an installer manually.
 
+**Implementation status (2026-10-30):** Updater/process integration, About & updates controls, background notification, operation locking/progress/retries, signed multi-target staging, and complete manifest assembly are implemented. Versions are synchronized at `0.2.0`. A controlled Apple Silicon `0.2.0 → 0.2.1` install/relaunch retained both histories; signed production archive verification and tamper/version-rejection tests also pass. [Updater setup](docs/UPDATER.md) and [verification evidence](docs/BASELINES.md) record the remaining gates: GitHub signing secrets/authentication, remote CI/HTTPS publication, platform trust/signing setup, Intel macOS, and Windows MSI/NSIS upgrades. M1 is not yet cleared for broad distribution.
+
 Use the official Tauri updater and process plugins. The updater supports signed artifacts and a static JSON endpoint; configure the supported platform entries and follow its installation/restart behavior. [Tauri updater documentation](https://v2.tauri.app/plugin/updater/)
 
 ### Delivery tasks

@@ -29,16 +29,18 @@ cargo test --locked --manifest-path src-tauri/Cargo.toml
 Build installers for the machine's architecture, for example:
 
 ```bash
-npm run tauri build -- --ci --target aarch64-apple-darwin --bundles app dmg -- --locked
+npm run tauri build -- --ci --config src-tauri/tauri.unsigned.conf.json --target aarch64-apple-darwin --bundles app dmg -- --locked
 ```
 
 Use `x86_64-apple-darwin` on Intel macOS. On Windows x64 use:
 
 ```powershell
-npm run tauri build -- --ci --target x86_64-pc-windows-msvc --bundles nsis msi -- --locked
+npm run tauri build -- --ci --config src-tauri/tauri.unsigned.conf.json --target x86_64-pc-windows-msvc --bundles nsis msi -- --locked
 ```
 
 The Rust target must be installed with `rustup target add <target>`. An explicit target places build output under `src-tauri/target/<target>/release/bundle/`.
+
+The unsigned override is for validation builds. Tagged releases require the updater signing key and generate signed archives/signatures; follow [UPDATER.md](UPDATER.md) for key custody, CI secrets, platform-signing prerequisites, and signed local builds.
 
 Tests protect existing task-name normalization (including current punctuation behavior), XML/XAML formatting, EAN-13 validation, barcode formats, backup compatibility, regenerated import IDs, timestamps/payloads, and database reopening. Backup tests use temporary files and databases, never the installed application's data. They do not establish real installer upgrade behavior or scanner readability.
 
@@ -71,7 +73,7 @@ Merging a feature PR no longer bumps a version or publishes a release. Keep M0 u
    git push origin v0.2.0
    ```
 
-5. The tag workflow calls the same native validation and checks tag/version agreement. Only after every target succeeds does it collect the installers into a **draft** GitHub Release. It does not commit, bump versions, or create tags itself.
+5. The tag workflow calls the same native validation with signing enabled and checks tag/version agreement. Each target's updater artifacts must pass native signature verification against the committed public key. After every target succeeds, the job assembles a complete `latest.json` and collects installers, signed packages, signatures, and the manifest into a **draft** GitHub Release. It does not commit, bump versions, or create tags itself.
 6. Download the draft artifacts and complete the checklist below on every advertised target. Edit the generated release notes using the changelog, then publish the draft through GitHub Releases. A draft is intentional: packaging checks alone cannot prove data retention or OS trust behavior.
 
 If a build fails, no release job runs. Re-run a transient failure against the same source; for a source fix, use a new reviewed release version/tag. Do not move an already distributed tag or overwrite a published installer to hide a change.
@@ -87,13 +89,13 @@ Use a dedicated OS test account or machine. The production identifier is `com.sa
 - [ ] Quit the old app and install the candidate over it using the same installer type. Do not uninstall or delete app data first.
 - [ ] Launch the candidate and verify version, counts, fields, timestamps, task creation, branch/PR copy, XML formatting, all barcode types, SVG/PNG where supported, and both histories after another restart. DataMatrix PNG is currently unsupported by the Rust command; SVG remains available.
 - [ ] Verify task/history JSON export and import in a separate clean test profile. Imports append records and assign new IDs; do not test restoration by importing into the only copy of valuable history.
-- [ ] Start the installed app offline and exercise the local tools. Update functionality belongs to M1 and is not available yet.
+- [ ] Start the installed app offline and exercise the local tools. About & updates must report a failed manual check without blocking normal use. Test the actual updater path with a subsequent controlled version before broad rollout.
 - [ ] Check keyboard navigation, window resizing, and available themes.
 - [ ] Record installer size and launch timing using [BASELINES.md](BASELINES.md).
-- [ ] Document macOS Gatekeeper/Windows trust prompts honestly. M0 does not add platform signing, notarization, or signed updater artifacts.
+- [ ] Document macOS Gatekeeper/Windows trust prompts honestly. Updater signatures do not replace platform signing/notarization.
 
 ## Recovery
 
 Keep the previous release installer and backups accessible. Before reinstalling an older app, close the current app and preserve its database. An old binary is not guaranteed to understand a newer schema. Restore a compatible closed-app database backup, or use compatible JSON imports in a clean test profile. Never delete the only database copy as an upgrade troubleshooting step.
 
-M1 adds updater key management, signed update artifacts, a manifest, and actual updater-path tests. Those are not provided by the draft-release workflow in M0.
+M1 adds signed update artifacts and a complete manifest to the release workflow. Follow [UPDATER.md](UPDATER.md) for first-install limitations, key backup, and actual updater-path tests before publishing.

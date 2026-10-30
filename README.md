@@ -42,7 +42,7 @@ This will:
 ### Build a release bundle
 
 ```bash
-npm run tauri build
+npm run tauri build -- --config src-tauri/tauri.unsigned.conf.json
 ```
 
 This produces native binaries / installers in `src-tauri/target/release/` according to your platform (DMG/APP for macOS, MSI/EXE for Windows, etc.).
@@ -57,6 +57,10 @@ cargo test --locked --manifest-path src-tauri/Cargo.toml
 ```
 
 Pull requests validate Windows x64 and macOS Apple Silicon/Intel builds. Releases are intentional: update versions in a release PR, then tag its merged commit; CI builds a draft release after all targets pass. See [release and upgrade checks](docs/RELEASING.md), [baseline measurements](docs/BASELINES.md), and the [changelog](CHANGELOG.md).
+
+### In-app updates
+
+Use **About & updates** in the header to check for releases, review notes, and choose **Update and restart**. Packaged apps also notify when a background check finds a new version. Users on `0.1.9` need one manual installation of `0.2.0`. See [updater signing and release setup](docs/UPDATER.md) before publishing a release; ordinary contributor builds use the unsigned override above.
 
 ### Debug on macOS (quarantine)
 

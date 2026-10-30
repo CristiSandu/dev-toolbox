@@ -47,14 +47,16 @@ test('setting a minor version updates all versions without changing dependencies
   const before = JSON.parse(readFileSync(join(directory, 'package-lock.json'), 'utf8'));
   const cargoBefore = readFileSync(join(directory, 'src-tauri/Cargo.lock'), 'utf8');
   const oldVersion = checkVersions(directory);
-  assert.equal(setVersion(directory, '0.2.0'), '0.2.0');
-  assert.equal(checkVersions(directory, 'v0.2.0'), '0.2.0');
+  const [major, minor] = oldVersion.split('.').map(Number);
+  const nextVersion = `${major}.${minor + 1}.0`;
+  assert.equal(setVersion(directory, nextVersion), nextVersion);
+  assert.equal(checkVersions(directory, `v${nextVersion}`), nextVersion);
   const after = JSON.parse(readFileSync(join(directory, 'package-lock.json'), 'utf8'));
-  before.version = '0.2.0';
-  before.packages[''].version = '0.2.0';
+  before.version = nextVersion;
+  before.packages[''].version = nextVersion;
   assert.deepEqual(after, before);
   assert.equal(readFileSync(join(directory, 'src-tauri/Cargo.lock'), 'utf8'),
-    cargoBefore.replace(`name = "dev-toolbox"\nversion = "${oldVersion}"`, 'name = "dev-toolbox"\nversion = "0.2.0"'));
+    cargoBefore.replace(`name = "dev-toolbox"\nversion = "${oldVersion}"`, `name = "dev-toolbox"\nversion = "${nextVersion}"`));
 });
 
 test('invalid versions are rejected before touching any files', t => {

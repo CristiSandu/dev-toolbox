@@ -52,3 +52,25 @@ Launch timing and installed-application upgrade retention remain manual gates; t
 - Workflow static validation: Actionlint `v1.7.12` passes.
 - Windows x64 / macOS Intel CI and native installation tests: pending; workflows are configured but have not been run remotely in this task.
 - Tagged release rebuild and real upgrade from the preceding release: pending; no tag, release, or deployment was created during implementation.
+
+## M1 updater verification — 2026-10-30
+
+Source is the M0 commit `3dd05a1` plus uncommitted M1 changes; configured application version is now `0.2.0`.
+
+- JS: 18 tests pass, including updater state/concurrency/failure handling and complete four-platform manifest assembly.
+- Rust: existing 9 regressions and the native download/signature test pass. The native test accepts correctly signed bytes, rejects a changed payload, and rejects an announced version differing from its signed version.
+- Signed production Apple Silicon app/DMG/updater archive builds successfully with locked dependencies. The opt-in native artifact test downloads and verifies the actual staged `0.2.0` archive against the committed production public key.
+- Actionlint `v1.7.12` passes; the UI mechanical detector reports no findings. Existing Vite chunk/import warnings remain.
+
+### Controlled install/restart check
+
+Used packaged debug Rust builds with production-built frontend assets, a unique `com.sanduilie-cristian.dev-toolbox.m1-smoke-*` identifier, and a loopback update server. Temporary config overrides allowed HTTP only in the test app. Production config remains HTTPS-only with signature and signed-version verification enabled. Personal production app data was not read or changed.
+
+1. Built a `0.2.1` candidate, signed its updater archive, and served a matching manifest.
+2. Built/launched a `0.2.0` baseline with the same isolated identity and one pre-seeded task plus one code-history entry.
+3. Confirmed the UI displayed installed `0.2.0`, notified about `0.2.1`, and showed the candidate's release notes. Later deferred installation and the task history remained usable.
+4. Chose Update and restart. Observed download progress, actual app replacement, and a reopened app displaying `0.2.1` and up-to-date status. The installed bundle's `CFBundleShortVersionString` also reads `0.2.1`.
+5. Compared all task/history database fields and timestamps before/after; both histories were identical.
+6. Stopped the loopback server, performed a manual check, and verified a recoverable connection error with Check again. Quit the isolated app and stopped the server afterward.
+
+This proves the local Apple Silicon replacement/relaunch/data-retention path. It does not establish GitHub HTTPS hosting, platform signing/notarization, release-build runtime trust on clean machines, Intel macOS, or Windows MSI/NSIS upgrade behavior. GitHub CLI is unauthenticated, so repository signing secrets and remote CI/release publication remain pending. No public release/tag was created.
