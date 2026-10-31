@@ -15,7 +15,8 @@
         "title": "dev-toolbox",
         "fullscreen": false,
         "maximized": true,
-        "resizable": true
+        "resizable": true,
+        "dragDropEnabled": false
       }
     ],
     "security": {

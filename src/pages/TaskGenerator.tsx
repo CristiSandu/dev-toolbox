@@ -25,6 +25,8 @@ import {
   ResizablePanel,
   ResizableHandle,
 } from "@/components/ui/resizable";
+import { ScreenshotCapture } from "@/features/screenshot/ScreenshotCapture";
+import { jiraTypes, type JiraType } from "@/features/screenshot/parse-jira";
 import AnimatedCopyButton from "@/components/animated-copy-button";
 
 export default function TaskGenerator() {
@@ -32,6 +34,8 @@ export default function TaskGenerator() {
   const [taskNumber, setTaskNumber] = useState<string>("");
   const [taskName, setTaskName] = useState<string>("");
   const [branchType, setBranchType] = useState<string>("feature");
+
+  const [jiraIssueType, setJiraIssueType] = useState<JiraType | null>(null);
 
   // Generated previews
   const { branch: generatedBranch, prTitle: generatedPR } = generateTaskNames(
@@ -47,8 +51,12 @@ export default function TaskGenerator() {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   const loadTasks = async () => {
-    const items = (await invoke("get_tasks")) as Task[];
-    setTasks(items);
+    try {
+      const items = (await invoke("get_tasks")) as Task[];
+      setTasks(items);
+    } catch (error) {
+      toast.error("Could not load task history", { description: String(error) });
+    }
   };
 
   useEffect(() => {
@@ -60,19 +68,25 @@ export default function TaskGenerator() {
     setTaskNumber("");
     setTaskName("");
     setBranchType("feature");
+    setJiraIssueType(null);
   };
 
   const saveTask = async () => {
-    await invoke("save_task", {
-      name: taskName,
-      number: taskNumber,
-      featureType: branchType,
-      branch: generatedBranch,
-      prTitle: generatedPR,
-    });
+    try {
+      await invoke("save_task", {
+        name: taskName,
+        number: taskNumber,
+        featureType: branchType,
+        branch: generatedBranch,
+        prTitle: generatedPR,
+        jiraIssueType,
+      });
 
-    resetForm();
-    await loadTasks();
+      resetForm();
+      await loadTasks();
+    } catch (error) {
+      toast.error("Could not save task", { description: String(error) });
+    }
   };
 
   // Filtering
@@ -95,6 +109,7 @@ export default function TaskGenerator() {
     setTaskNumber(t.number);
     setTaskName(t.name);
     setBranchType(t.feature_type);
+    setJiraIssueType(t.jira_issue_type ?? null);
   };
 
   const deleteTask = async (id: number) => {
@@ -199,6 +214,14 @@ export default function TaskGenerator() {
           value={taskName}
           onChange={(e) => setTaskName(e.target.value)}
         />
+
+        <div className="space-y-1">
+          <label className="text-sm font-medium">Jira issue type</label>
+          <Select value={jiraIssueType ?? "unknown"} disabled={isViewOnly} onValueChange={value => setJiraIssueType(value === "unknown" ? null : value as JiraType)}>
+            <SelectTrigger aria-label="Jira issue type"><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="unknown">Unknown</SelectItem>{jiraTypes.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
 
         {/* Generated Branch */}
         <div>
@@ -313,6 +336,7 @@ export default function TaskGenerator() {
                 ${selectedTask?.id === t.id ? "bg-muted" : ""}`}
               >
                 <div className="font-medium">{t.pr_title}</div>
+                {t.jira_issue_type && <div className="text-xs text-muted-foreground">{t.jira_issue_type}</div>}
                 <div className="text-xs text-muted-foreground">{t.branch}</div>
                 <div className="text-[10px] text-muted-foreground">
                   {new Date(t.created_at).toLocaleString()}
@@ -335,9 +359,16 @@ export default function TaskGenerator() {
   );
 
   return (
-    <div className="p-4 h-full w-full md:overflow-hidden overflow-y-auto">
+    <div className="p-4 h-full w-full flex flex-col gap-4 md:overflow-hidden overflow-y-auto">
+      <ScreenshotCapture onApply={draft => {
+        setSelectedTask(null);
+        setTaskNumber(draft.key);
+        setTaskName(draft.summary);
+        setJiraIssueType(draft.jiraType);
+        setBranchType(draft.branchType);
+      }} />
       {/* DESKTOP MODE — resizable side-by-side */}
-      <div className="hidden md:block h-full">
+      <div className="hidden md:block flex-1 min-h-0">
         <ResizablePanelGroup direction="horizontal" className="h-full">
           {/* LEFT */}
           <ResizablePanel defaultSize={45} minSize={30}>

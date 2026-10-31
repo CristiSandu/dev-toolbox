@@ -1,7 +1,7 @@
 # Dev Toolbox — Next Features Delivery Plan
 
 **Prepared:** 2026-10-30  
-**Status:** Proposed implementation plan; no features implemented by this document.  
+**Status:** M0–M3 implemented locally; remaining platform and release checks are recorded in [screenshot capture](docs/SCREENSHOT_CAPTURE.md) and [Monaco verification](docs/MONACO.md).
 **Starting version:** `0.1.9`  
 **Planning assumption:** One developer, macOS and Windows desktop, offline-first use.
 
@@ -11,12 +11,12 @@ Ship one substantial feature per release:
 
 1. Establish regression checks and a reliable release process.
 2. Ship in-app updates so later releases are easier to install.
-3. Replace Ace with Monaco and add text diff.
-4. Add local screenshot-to-task capture.
+3. Add local screenshot-to-task capture.
+4. Replace Ace with Monaco and add text diff.
 5. Expose a small set of deterministic utilities through MCP.
 6. Expand into test cases and API collections after the MCP foundation works.
 
-This preserves the attached roadmap's goals while separating Monaco and OCR, which have independent packaging and performance risks. The version numbers below are proposed release boundaries, not deadlines. The first useful stopping point is `v0.3.0`; OCR and MCP can follow without delaying the formatter.
+This preserves the attached roadmap's goals while separating Monaco and OCR, which have independent packaging and performance risks. The version numbers below are proposed release boundaries, not deadlines. Per the requested order, screenshot capture is M2 (`v0.3.0`) and Monaco is M3 (`v0.4.0`). Release versions remain proposed boundaries.
 
 ## 2. Verified starting point
 
@@ -53,8 +53,8 @@ This is a planning review, not a full code audit. CI runs, signing credentials, 
 |---|---|---|---|---|---|
 | M0: Release foundations | Before `v0.2.0` | P0 | 2–3 days | None | Safer builds and preserved data |
 | M1: In-app updater | `v0.2.0` | P0 | 4–6 days | M0 | Check, download, install, and reopen |
-| M2: Monaco + diff | `v0.3.0` | P1 | 3–5 days | M0; ship after M1 | Offline XML/XAML editing and comparison |
-| M3: Screenshot-to-task | `v0.4.0` | P1 | 5–8 days | M0; ship after M2 | Review extracted Jira fields before saving |
+| M2: Screenshot-to-task | `v0.3.0` | P1 | 5–8 days | M0; ship after M1 | Review extracted Jira fields before saving |
+| M3: Monaco + diff | `v0.4.0` | P1 | 3–5 days | M0; ship after M2 | Offline XML/XAML editing and comparison |
 | M4: MCP MVP | `v0.5.0` | P2 | 4–6 days | M0 and stable reusable utility contracts | Coding agents can invoke local tools |
 | M5: Test collections | `v0.6.0` | P2 | 4–7 days | M4 | Export structured QA cases and API collections |
 
@@ -96,29 +96,7 @@ Use the official Tauri updater and process plugins. The updater supports signed 
 
 **Recovery:** Keep the previous installer available and document backup/restore. Do not promise automatic downgrade. Preserve `com.sanduilie-cristian.dev-toolbox` and the existing app-data location.
 
-## 7. M2 — Monaco formatter and diff (`v0.3.0`)
-
-**User story:** I can format XAML/XML and compare two texts without leaving the toolbox.
-
-### MVP
-
-- Format tab with editable input, read-only output, Format, Copy, and Clear.
-- Diff tab with editable Original/Modified, side-by-side/inline toggle, copy per side, Swap, and Ignore whitespace.
-- Existing route remains `/xaml`; theme and resizing follow the current app.
-- `Cmd/Ctrl+Shift+F` formats; editor search and keyboard navigation remain available.
-
-### Delivery tasks
-
-- [ ] **FMT-01 — Package Monaco offline.** Verify React 19 compatibility for selected versions. Configure `@monaco-editor/react` to use the installed Monaco instance and Vite-bundled workers. The wrapper documents a local-package configuration; do not leave its CDN loader as the runtime path. [Monaco React local-package setup](https://github.com/suren-atoyan/monaco-react#use-monaco-editor-as-an-npm-package)
-- [ ] **FMT-02 — Preserve Format behavior.** Keep `vkbeautify` initially. Add separate XML well-formedness validation and clear errors; do not imply XML validation checks XAML runtime semantics. Show errors outside copied output and preserve the user's input.
-- [ ] **FMT-03 — Add raw-text diff.** Make whitespace ignoring an explicit option. Do not format either side automatically. Changing tabs must not discard text.
-- [ ] **FMT-04 — Verify and remove Ace.** Check packaged offline startup, theme, shortcuts, resizing, tab state, and XML fixtures. Compare 100 KB and 1 MB samples against M0. Set a usable file limit or warning if needed; lazy-load the editor route. Remove Ace dependencies/imports after parity is verified.
-
-**Done when:** A packaged app launched with networking disabled can format and diff; identical inputs show no changes; edits appear correctly; malformed XML yields a useful error without losing input; other routes do not pay unnecessary editor startup cost.
-
-**Deferred:** JSON/YAML formatting, Git integration, multi-file comparison, custom language servers, and advanced editor preferences.
-
-## 8. M3 — Screenshot-to-task (`v0.4.0`)
+## 7. M2 — Screenshot-to-task (`v0.3.0`)
 
 **User story:** I paste a Jira screenshot, review the suggested issue fields, and save using the existing task flow.
 
@@ -144,6 +122,30 @@ If key/summary extraction is unreliable on the agreed clear-image subset, narrow
 **Done when:** Paste/select/drop works in packaged builds, a clear screenshot becomes a reviewed task, uncertain fields remain editable, cancel leaves existing text intact, and first-run recognition works offline with no cached downloads. Migration/import checks pass on old data.
 
 **Deferred:** Jira authentication/API lookup, icon classification, multiple OCR languages, screenshot storage, and native OCR unless the feasibility gate requires it.
+
+## 8. M3 — Monaco formatter and diff (`v0.4.0`)
+
+**Implementation:** Local Monaco Format/Diff is implemented. See [usage and verification](docs/MONACO.md); Windows/Intel interaction and large-document UI checks remain release gates.
+
+**User story:** I can format XAML/XML and compare two texts without leaving the toolbox.
+
+### MVP
+
+- Format tab with editable input, read-only output, Format, Copy, and Clear.
+- Diff tab with editable Original/Modified, side-by-side/inline toggle, copy per side, Swap, and Ignore whitespace.
+- Existing route remains `/xaml`; theme and resizing follow the current app.
+- `Cmd/Ctrl+Shift+F` formats; editor search and keyboard navigation remain available.
+
+### Delivery tasks
+
+- [ ] **FMT-01 — Package Monaco offline.** Verify React 19 compatibility for selected versions. Configure `@monaco-editor/react` to use the installed Monaco instance and Vite-bundled workers. The wrapper documents a local-package configuration; do not leave its CDN loader as the runtime path. [Monaco React local-package setup](https://github.com/suren-atoyan/monaco-react#use-monaco-editor-as-an-npm-package)
+- [ ] **FMT-02 — Preserve Format behavior.** Keep `vkbeautify` initially. Add separate XML well-formedness validation and clear errors; do not imply XML validation checks XAML runtime semantics. Show errors outside copied output and preserve the user's input.
+- [ ] **FMT-03 — Add raw-text diff.** Make whitespace ignoring an explicit option. Do not format either side automatically. Changing tabs must not discard text.
+- [ ] **FMT-04 — Verify and remove Ace.** Check packaged offline startup, theme, shortcuts, resizing, tab state, and XML fixtures. Compare 100 KB and 1 MB samples against M0. Set a usable file limit or warning if needed; lazy-load the editor route. Remove Ace dependencies/imports after parity is verified.
+
+**Done when:** A packaged app launched with networking disabled can format and diff; identical inputs show no changes; edits appear correctly; malformed XML yields a useful error without losing input; other routes do not pay unnecessary editor startup cost.
+
+**Deferred:** YAML formatting, Git integration, multi-file comparison, custom language servers, and advanced editor preferences. JSON formatting was added alongside XML/XAML after M3.
 
 ## 9. M4 — Standalone MCP MVP (`v0.5.0`)
 

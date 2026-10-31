@@ -23,3 +23,6 @@ release-artifacts/
 *.njsproj
 *.sln
 *.sw?
+
+# Copied from locked npm dependencies before dev/build
+public/ocr/

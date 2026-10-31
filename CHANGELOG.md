@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+- Align Format and Diff toolbar layouts and editor surfaces, with matching panel headers, Copy actions, selectors, and Clear controls.
+
+- Add a JSON format option with local Monaco highlighting/validation, two-space indentation, precision-preserving output, and the existing Copy/Clear/shortcut controls. Rename the tool to Text Formatter while retaining `/xaml`.
+
+- Fix cursor jumps and undo loss when typing in the Original side of Diff; synchronize external changes only when the model text differs.
+
+- Replace Ace with locally bundled Monaco XML editors, app theme support, search, copy, clear, and Cmd/Ctrl+Shift+F formatting.
+- Add XML well-formedness errors outside copied output and preserve input/previous successful output on failure.
+- Add raw-text Diff with editable sides, inline/split views, Swap, copy, and explicit leading/trailing whitespace handling. Lazy-load the editor route.
+
+- Add local Jira screenshot capture through clipboard paste, PNG/JPEG selection, and drag/drop, with editable review before applying to the task form.
+- Bundle English OCR assets for offline recognition; support progress, cancellation, retry, and bounded image sizes.
+- Preserve optional Jira issue type separately from Git branch type, migrate existing task databases transactionally, and support legacy 1.0/current 1.1 task backups.
+
 ## 0.2.0 (unreleased)
 
 - Add About & updates with current version, explicit update checks, release notes, download progress, install/restart, and retry controls.

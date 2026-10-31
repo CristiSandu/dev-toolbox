@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dev Toolbox · Jira screenshot capture</title>
+<style>
+:root{color-scheme:dark;--background:#111518;--foreground:#edf1ed;--muted-foreground:#a7b3b5;--card:#1b2429;--border:#34434b;--primary:#a9e7c3;--primary-foreground:#12261c;--secondary:#25323a;--warning:#e8c588;--radius:12px;--font-sans:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;--font-mono:ui-monospace,monospace}
+*{box-sizing:border-box}html,body{margin:0}body{font:17px/1.6 var(--font-sans);color:var(--foreground)}button,select{font:inherit}button{cursor:pointer}button:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid var(--primary);outline-offset:4px}button:disabled{opacity:.35;cursor:default}main{width:100%}.slide{display:none;padding:30px 0 20px;min-height:520px}.slide.active{display:block}.eyebrow{font-size:12px;font-weight:650;letter-spacing:.14em;text-transform:uppercase;color:var(--primary);margin:0 0 24px}h1{font-size:clamp(40px,7vw,66px);line-height:1.08;font-weight:650;letter-spacing:-.045em;margin:0 0 26px;max-width:850px}h2{font-size:clamp(30px,5vw,44px);line-height:1.16;letter-spacing:-.035em;font-weight:650;margin:0 0 26px}h3{font-size:21px;line-height:1.3;margin:0 0 8px}p{margin:0 0 18px}.lead{font-size:21px;max-width:760px;color:var(--muted-foreground)}.accent{color:var(--primary)}.grid{display:grid;grid-template-columns:1fr 1fr;gap:30px}.rule{border-top:1px solid var(--border);padding-top:20px;margin-top:28px}.muted,small{color:var(--muted-foreground)}small{font-size:12px;display:block;margin-top:24px;overflow-wrap:anywhere}kbd,code{font-family:var(--font-mono);font-size:.86em}kbd{display:inline-block;padding:4px 12px;border:1px solid var(--border);border-bottom-width:3px;border-radius:6px}pre{margin:12px 0;white-space:pre-wrap;overflow-wrap:anywhere;font:14px/1.7 var(--font-mono);padding:16px;background:var(--card);border-radius:var(--radius)}.steps{list-style:none;padding:0;margin:0;counter-reset:step}.steps li{counter-increment:step;border-top:1px solid var(--border);padding:15px 0 15px 42px;position:relative}.steps li:before{content:"0" counter(step);position:absolute;left:0;color:var(--primary);font-family:var(--font-mono);font-size:14px}.steps strong{display:block}.flow{display:grid;grid-template-columns:1fr 26px 1fr;gap:10px;align-items:center;margin:22px 0}.box{padding:16px;border-radius:var(--radius);background:var(--card)}.arrow{text-align:center;color:var(--primary);font-size:24px}.flow .wide{grid-column:1/-1}.metric{font-size:48px;letter-spacing:-.04em;line-height:1.1;color:var(--primary);display:block;margin-bottom:8px}.warning{color:var(--warning)}table{border-collapse:collapse;width:100%;font-size:15px}td,th{text-align:left;padding:12px 6px;border-bottom:1px solid var(--border);vertical-align:top}th{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted-foreground)}ul{padding-left:22px}li{margin-bottom:9px}.toolbar{display:flex;align-items:center;gap:10px;border-top:1px solid var(--border);padding:16px 0;flex-wrap:wrap}.toolbar button,.toolbar select{border:1px solid var(--border);border-radius:7px;background:transparent;color:var(--foreground);padding:7px 13px}.toolbar select{max-width:230px;background:var(--card)}.toolbar .count{margin-left:auto;font:12px var(--font-mono);color:var(--muted-foreground)}progress{display:block;width:100%;height:3px;border:0;accent-color:var(--primary)}.hint{font-size:12px;color:var(--muted-foreground);padding:6px 0}.pill{display:inline-block;font-size:12px;color:var(--primary);border:1px solid var(--border);border-radius:20px;padding:4px 12px;margin-right:6px}a{color:var(--primary)}
+@media(max-width:550px){.grid{grid-template-columns:1fr;gap:20px}.slide{min-height:0;padding-top:20px}.lead{font-size:18px}.toolbar select{max-width:175px}table{font-size:13px}.flow{grid-template-columns:1fr}.flow .wide{grid-column:auto}.arrow{transform:rotate(90deg)}h1{font-size:42px}}
+@media print{body{color:#111;background:white;font-size:16px}.slide,.slide.active{display:block!important;break-after:page;min-height:0;padding:30px}.toolbar,progress,.hint{display:none}h1,h2{color:#111}.muted,.lead,small{color:#444}.accent,.eyebrow,.metric,.warning{color:#286345}.box,pre{background:#f2f5f3;color:#111}.slide:last-of-type{break-after:auto}}
+</style>
+</head>
+<body>
+<main aria-label="Jira screenshot capture presentation">
+<section class="slide active" data-title="Overview" aria-label="Slide 1: Overview">
+<p class="eyebrow">Dev Toolbox / M2 / Feature walkthrough</p>
+<h1>Jira screenshot<br><span class="accent">to task</span></h1>
+<p class="lead">Paste a screenshot. Review the suggested issue fields. Generate a branch and PR title using the existing task workflow.</p>
+<div class="rule"><p><kbd>⌘ V</kbd> on macOS &nbsp; <kbd>Ctrl V</kbd> on Windows</p><span class="pill">Local English OCR</span><span class="pill">Review before saving</span></div>
+<small>Implementation overview · October 2026 · Windows interaction checks remain pending</small>
+</section>
+<section class="slide" data-title="User workflow" aria-label="Slide 2: User workflow">
+<p class="eyebrow">01 / Using the feature</p><h2>The screenshot workflow</h2>
+<ol class="steps"><li><strong>Paste, select, or drop</strong>On Task Generator, paste an image from the clipboard, choose a PNG/JPEG, or drop one onto the import area.</li><li><strong>Wait for local recognition</strong>Progress is shown while OCR reads the image. Cancel or retry if needed.</li><li><strong>Review the suggestions</strong>Correct the issue key and summary. Choose a candidate when several issue keys are found.</li><li><strong>Apply, then save</strong>Apply replaces the form fields. Save Task separately adds the reviewed task to history.</li></ol>
+<small>Normal text paste still works in form fields. Cancelling leaves the task form unchanged.</small>
+</section>
+<section class="slide" data-title="Example" aria-label="Slide 3: Example">
+<p class="eyebrow">02 / Worked example</p><h2>A reviewed issue becomes<br>a branch and PR title</h2>
+<div class="grid"><div><h3>Text in the screenshot</h3><pre>DEV-42
+Fix login when opening a second window
+Type: Bug</pre><p class="muted">The user checks the extracted text and confirms the issue type.</p></div><div><h3>Task form after applying</h3><pre>Issue key      DEV-42
+Jira type      Bug
+Git type       bugfix</pre></div></div>
+<div class="rule"><h3>Generated output</h3><pre>bugfix/DEV-42-fix-login-when-opening-a-second-window
+
+DEV-42: Fix login when opening a second window</pre></div>
+<small>Synthetic example used by the OCR smoke test; it contains no real issue data.</small>
+</section>
+<section class="slide" data-title="Implementation stack" aria-label="Slide 4: Implementation stack">
+<p class="eyebrow">03 / Technology</p><h2>What powers the feature</h2>
+<table><thead><tr><th>Technology</th><th>Role</th></tr></thead><tbody><tr><td>React 19 + TypeScript</td><td>Image intake, progress, editable review, and applying fields to Task Generator.</td></tr><tr><td>Existing Radix / shadcn components</td><td>Dialog, inputs, selection controls, and buttons that match the app.</td></tr><tr><td>Tesseract.js 6 + WebAssembly</td><td>English text recognition on the device, using bundled engine and language files.</td></tr><tr><td>Web Workers</td><td>OCR runs off the UI thread. An outer worker owns the OCR worker so cancellation can stop initialization too.</td></tr><tr><td>Tauri 2 + Rust + SQLite</td><td>Existing desktop shell, commands, local task storage, and schema migration.</td></tr><tr><td>Vite + npm lifecycle scripts</td><td>Build the worker and copy OCR assets into the packaged frontend.</td></tr></tbody></table>
+<small>Implementation: src/features/screenshot/ · scripts/prepare-ocr-assets.mjs · src-tauri/src/commands.rs</small>
+</section>
+<section class="slide" data-title="Processing architecture" aria-label="Slide 5: Processing architecture">
+<p class="eyebrow">04 / Processing</p><h2>How an image becomes<br>editable task fields</h2>
+<div class="flow"><div class="box"><strong>Image input</strong><br><span class="muted">Clipboard, file picker, or drop</span></div><div class="arrow" aria-hidden="true">→</div><div class="box"><strong>Validate before decoding</strong><br><span class="muted">Format, bytes, width, and height</span></div><div class="box"><strong>Local OCR worker</strong><br><span class="muted">English text + positions + confidence</span></div><div class="arrow" aria-hidden="true">→</div><div class="box"><strong>Pure Jira parser</strong><br><span class="muted">Find keys, associate title lines, suggest type</span></div><div class="box wide"><strong>Review → Apply → Save Task → SQLite</strong><br><span class="muted">Persistence happens only after the user saves the reviewed form.</span></div></div>
+<p class="muted">Multiple keys remain separate candidates. Wrapped title lines use their positions. An issue type shown only as an icon stays Unknown for manual selection.</p>
+<small>Parser: parse-jira.ts · Recognition lifecycle: recognize.ts + ocr.worker.ts</small>
+</section>
+<section class="slide" data-title="Privacy and safeguards" aria-label="Slide 6: Privacy and safeguards">
+<p class="eyebrow">05 / Local operation</p><h2>Bundled OCR, controlled resources</h2>
+<div class="grid"><div><h3>Privacy</h3><ul><li>Worker, WASM, and English model ship with the app.</li><li>No OCR service, CDN, or first-run model download.</li><li>Screenshots and raw OCR text stay out of task history and application logs.</li><li>Closing review releases the image URL and in-memory references.</li></ul></div><div><h3>Resource limits</h3><ul><li>PNG or JPEG, up to 10 MiB.</li><li>Up to 16 megapixels and 8192 pixels per side.</li><li>One recognition job at a time.</li><li>Cancel, route changes, or a two-minute timeout terminate the workers.</li></ul></div></div>
+<p class="rule muted">OCR assets add about 25 MiB before installer compression. The app’s separate update check still uses the network.</p>
+<small>Asset preparation: predev / prebuild → public/ocr/ → packaged frontend</small>
+</section>
+<section class="slide" data-title="Data compatibility" aria-label="Slide 7: Data compatibility">
+<p class="eyebrow">06 / Persistence</p><h2>Jira type and Git type<br>have separate meanings</h2>
+<table><thead><tr><th>Jira issue type</th><th>Suggested Git branch type</th></tr></thead><tbody><tr><td>Bug</td><td><code>bugfix</code></td></tr><tr><td>Story, Task, Epic, Sub-task</td><td><code>feature</code></td></tr><tr><td>Unknown</td><td><code>feature</code> default; user can change it</td></tr><tr><td>Any issue type</td><td><code>hotfix</code> remains a manual choice</td></tr></tbody></table>
+<div class="grid rule"><div><h3>Existing database</h3><p class="muted">A transaction adds nullable <code>jira_issue_type</code> and advances schema version 0 → 1. Existing rows and code history remain intact.</p></div><div><h3>Task backups</h3><p class="muted">Exports use version 1.1. Imports accept 1.0 and 1.1, validate Jira types, and insert atomically with fresh IDs.</p></div></div>
+<small>Code-history backups keep version 1.0. Unknown future schema or task-backup versions are rejected.</small>
+</section>
+<section class="slide" data-title="Verification" aria-label="Slide 8: Verification">
+<p class="eyebrow">07 / Evidence</p><h2>What has been verified</h2>
+<div class="grid"><div><span class="metric">27</span><h3>JavaScript tests passed</h3><p class="muted">Parsing, multiline titles, multiple keys, image limits, worker cleanup, and existing regressions.</p></div><div><span class="metric">13</span><h3>Native tests passed</h3><p class="muted">Migration, backup compatibility, atomic imports, metadata round-trip, and existing native behavior.</p></div></div>
+<div class="rule"><h3>Packaged macOS walkthrough passed</h3><p class="muted">Select image → local OCR → review → apply → save. Clipboard paste from Preview also produced the expected review fields.</p><p class="muted">A synthetic English fixture was recognized locally in about 0.43 seconds on the development Mac. This is a smoke measurement, not a general performance or accuracy guarantee.</p></div>
+<small>Production frontend build passed. One existing signed-release-artifact test is intentionally ignored without release artifacts. Sources: docs/SCREENSHOT_CAPTURE.md and local test results.</small>
+</section>
+<section class="slide" data-title="Release checks" aria-label="Slide 9: Release checks">
+<p class="eyebrow">08 / Before release</p><h2>Remaining verification</h2>
+<ol class="steps"><li><strong>Windows interaction checks</strong>Verify clipboard images, file selection, drag/drop, cancellation, and packaged first-run offline recognition.</li><li><strong>Representative Jira screenshots</strong>Test at least 10 redacted examples across light/dark themes, cropped headers, multiline titles, and related issue links.</li><li><strong>Measure extraction quality</strong>Record exact issue-key matches, usable summaries, failures, and cold/warm recognition times. The proposed 90% clear-image target is still unmeasured.</li></ol>
+<p class="rule">To try it now: open <strong>Task Generator</strong>, copy a Jira screenshot, and press <kbd>⌘ V</kbd> or <kbd>Ctrl V</kbd>.</p>
+<small>Scope: screenshot capture is M2. Monaco remains the next separate milestone. Feature details: docs/SCREENSHOT_CAPTURE.md</small>
+</section>
+</main>
+<nav class="toolbar" aria-label="Presentation controls"><button id="prev" type="button" aria-label="Previous slide">←</button><select id="jump" aria-label="Choose slide"></select><button id="next" type="button" aria-label="Next slide">→</button><button id="print" type="button">Print / PDF</button><span class="count" id="count" aria-live="polite"></span></nav>
+<progress id="progress" max="9" value="1" aria-label="Slide progress"></progress>
+<p class="hint">Use ← → to navigate. Home / End jump to the first / last slide. Print includes all slides.</p>
+<script>
+(()=>{const slides=[...document.querySelectorAll('.slide')],jump=document.getElementById('jump');let current=0;slides.forEach((slide,i)=>{const option=document.createElement('option');option.value=i;option.textContent=`${i+1}. ${slide.dataset.title}`;jump.append(option)});function show(index){current=Math.max(0,Math.min(slides.length-1,index));slides.forEach((slide,i)=>{slide.classList.toggle('active',i===current);slide.setAttribute('aria-hidden',String(i!==current))});jump.value=current;document.getElementById('prev').disabled=current===0;document.getElementById('next').disabled=current===slides.length-1;document.getElementById('count').textContent=`${String(current+1).padStart(2,'0')} / ${slides.length}`;document.getElementById('progress').value=current+1}document.getElementById('prev').onclick=()=>show(current-1);document.getElementById('next').onclick=()=>show(current+1);jump.onchange=()=>show(Number(jump.value));document.getElementById('print').onclick=()=>window.print();document.addEventListener('keydown',event=>{if(event.target.matches('select,input,textarea,button'))return;const keys={ArrowRight:current+1,ArrowLeft:current-1,Home:0,End:slides.length-1};if(event.key in keys){event.preventDefault();show(keys[event.key])}});show(0)})();
+</script>
+</body></html>
