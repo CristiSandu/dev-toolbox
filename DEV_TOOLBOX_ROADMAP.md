@@ -1,7 +1,7 @@
 # Dev Toolbox — Next Features Delivery Plan
 
 **Prepared:** 2026-10-30  
-**Status:** M0/M1 implemented; M2 screenshot capture implemented locally, with real-layout accuracy and Windows interaction checks pending. See [capture verification](docs/SCREENSHOT_CAPTURE.md).
+**Status:** M0–M3 implemented locally; remaining platform and release checks are recorded in [screenshot capture](docs/SCREENSHOT_CAPTURE.md) and [Monaco verification](docs/MONACO.md).
 **Starting version:** `0.1.9`  
 **Planning assumption:** One developer, macOS and Windows desktop, offline-first use.
 
@@ -125,6 +125,8 @@ If key/summary extraction is unreliable on the agreed clear-image subset, narrow
 
 ## 8. M3 — Monaco formatter and diff (`v0.4.0`)
 
+**Implementation:** Local Monaco Format/Diff is implemented. See [usage and verification](docs/MONACO.md); Windows/Intel interaction and large-document UI checks remain release gates.
+
 **User story:** I can format XAML/XML and compare two texts without leaving the toolbox.
 
 ### MVP
@@ -143,7 +145,7 @@ If key/summary extraction is unreliable on the agreed clear-image subset, narrow
 
 **Done when:** A packaged app launched with networking disabled can format and diff; identical inputs show no changes; edits appear correctly; malformed XML yields a useful error without losing input; other routes do not pay unnecessary editor startup cost.
 
-**Deferred:** JSON/YAML formatting, Git integration, multi-file comparison, custom language servers, and advanced editor preferences.
+**Deferred:** YAML formatting, Git integration, multi-file comparison, custom language servers, and advanced editor preferences. JSON formatting was added alongside XML/XAML after M3.
 
 ## 9. M4 — Standalone MCP MVP (`v0.5.0`)
 

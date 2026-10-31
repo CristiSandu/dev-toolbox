@@ -8,7 +8,7 @@ import { AppUpdates } from "@/features/updater/AppUpdates";
 
 const TITLES: Record<string, string> = {
   "/task": "Task Generator",
-  "/xaml": "XAML Formatter",
+  "/xaml": "Text Formatter",
   "/diff": "Diff Viewer",
   "/codes": "Code Generator",
   "/": "Dev Toolbox",

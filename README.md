@@ -91,16 +91,19 @@ A comprehensive task management tool for developers working with Git workflows:
 - **Export/Import tasks** - Export all tasks to JSON file or import tasks from a previously exported JSON file
 - Responsive design with resizable panels for desktop and stacked layout for mobile
 
-### 2. XAML Formatter
-A powerful XAML/XML formatting tool with syntax highlighting:
+### 2. Text Formatter (XML/XAML, JSON & Diff)
+An XML/XAML and JSON formatting tool with syntax highlighting:
 - **Format XAML/XML** code with proper indentation
-- **Ace Editor** integration with syntax highlighting (Monokai theme)
+- **Format JSON** using the language selector, preserving number precision and key order; invalid JSON leaves the previous output intact
+- **Monaco Editor** with locally bundled workers, XML highlighting, and app light/dark themes
 - **Split-view editor** with input and output panels
 - **Keyboard shortcuts**:
-  - `Ctrl+Shift+F` - Format the code
-  - `Ctrl+F` - Open search in editor
+  - `Cmd/Ctrl+Shift+F` - Format the code
+  - `Cmd/Ctrl+F` - Open search in editor
 - **Resizable panels** for desktop, stacked layout for mobile
-- Built with `vkbeautify` for XML formatting
+- Built with `vkbeautify` for XML formatting and separate XML syntax validation
+- **Diff tab** with editable Original/Modified text, inline/split view, Swap, copy, and explicit whitespace handling
+- See [Monaco usage, limits, and verification](docs/MONACO.md)
 
 ### 3. Code Generator (Barcode & QR Code)
 A versatile barcode and QR code generation tool:

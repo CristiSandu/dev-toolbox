@@ -22,7 +22,7 @@ export function AppSidebar() {
 
   const links = [
     { to: "/task", label: "Task Generator", icon: ClipboardList },
-    { to: "/xaml", label: "XAML Formatter", icon: Code },
+    { to: "/xaml", label: "Text Formatter", icon: Code },
     { to: "/codes", label: "Code Generator", icon: QrCode },
   ];
 
