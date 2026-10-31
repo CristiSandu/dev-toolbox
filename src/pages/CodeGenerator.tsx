@@ -1,148 +1,60 @@
-// src/components/code-generator/CodeGenerator.tsx
-"use client";
-
-import { useState } from "react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { invoke } from "@tauri-apps/api/core";
 import { toast } from "sonner";
-
-import {
-  CodeType,
-  HistoryPayload,
-  MultiInputMode,
-} from "@/components/code-generator/codegen-types";
+import { QrCode, Layers, History } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { WorkspaceHeading } from "@/components/workspace";
+import type { CodeType, HistoryPayload, MultiInputMode } from "@/components/code-generator/codegen-types";
 import { SingleCodeTab } from "@/components/code-generator/SingleCodeTab";
 import { MultiCodeTab } from "@/components/code-generator/MultiCodeTab";
 import { CodegenHistory } from "@/components/code-generator/CodegenHistory";
-import { History } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useDraftState } from "@/hooks/use-draft-state";
+import { confirmAction } from "@/lib/confirm-action";
+import { isSamePayload } from "@/lib/barcode-utils";
+import { codeHistorySummary } from "@/lib/code-input";
 
 export default function CodeGenerator() {
-  // Single editor state
-  const [singleText, setSingleText] = useState("");
-  const [singleType, setSingleType] = useState<CodeType>("EAN-13");
-
-  const [selectedTab, setSelectedTab] = useState<string>("single");
-
-  // Multi editor state
-  const [multiText, setMultiText] = useState("");
-  const [multiType, setMultiType] = useState<CodeType>("QR Code");
-  const [multiMode, setMultiMode] = useState<MultiInputMode>("lines");
-
-  const [historyRefreshToken, setHistoryRefreshToken] = useState(0);
-  const [generationRefreshToken, setGenerationRefreshToken] = useState(0);
-
-  const [lastSavedMulti, setLastSavedMulti] = useState<HistoryPayload | null>(
-    null
-  );
-
-  const [lastSavedSingle, setLastSavedSingle] = useState<HistoryPayload | null>(
-    null
-  );
-
-  // Save to SQLite via Tauri + bump refresh token
-  const saveHistoryToDb = async (payload: HistoryPayload) => {
-    const source =
-      payload.mode === "single"
-        ? payload.singleText || ""
-        : payload.multiText || "";
-    const summary =
-      source.length > 60 ? source.slice(0, 57) + "..." : source || "(empty)";
-
+  const [singleText, setSingleText] = useDraftState("code.singleText", "");
+  const [singleType, setSingleType] = useDraftState<CodeType>("code.singleType", "EAN-13");
+  const [multiText, setMultiText] = useDraftState("code.multiText", "");
+  const [multiType, setMultiType] = useDraftState<CodeType>("code.multiType", "QR Code");
+  const [multiMode, setMultiMode] = useDraftState<MultiInputMode>("code.multiMode", "lines");
+  const [tab, setTab] = useDraftState("code.tab", "single");
+  const [lastSavedSingle, setLastSavedSingle] = useDraftState<HistoryPayload | null>("code.lastSavedSingle", null);
+  const [lastSavedMulti, setLastSavedMulti] = useDraftState<HistoryPayload | null>("code.lastSavedMulti", null);
+  const [historyRefresh, setHistoryRefresh] = useState(0);
+  const [singleRefresh, setSingleRefresh] = useState(0);
+  const [multiRefresh, setMultiRefresh] = useState(0);
+  const [params, setParams] = useSearchParams();
+  const entryId = params.get("entry");
+  useEffect(() => { if (entryId) setTab("history"); }, [entryId, setTab]);
+  const saveHistory = async (payload: HistoryPayload) => {
+    const source = codeHistorySummary(payload);
+    const summary = source.length > 80 ? source.slice(0, 77) + "…" : source;
     try {
-      await invoke("save_codegen_state", {
-        mode: payload.mode,
-        summary,
-        payload: JSON.stringify(payload),
-      });
-      setHistoryRefreshToken((t) => t + 1);
-    } catch (e) {
-      console.error("Failed to save history", e);
-      toast("Failed to save history", { description: String(e) });
-    }
+      await invoke("save_codegen_state", { mode: payload.mode, summary, payload: JSON.stringify(payload) });
+      setHistoryRefresh(value => value + 1); return true;
+    } catch (error) { toast.error("Code generated, but history could not be saved.", { description: String(error) }); return false; }
   };
-
-  // Load a history payload back into editors
-  const handleLoadStateFromHistory = (p: HistoryPayload) => {
-    if (p.mode === "single") {
-      if (p.singleType) setSingleType(p.singleType);
-      if (p.singleText !== undefined) setSingleText(p.singleText);
-      setLastSavedSingle(p);
-      setSelectedTab("single");
-      setGenerationRefreshToken((g) => g + 1);
+  const restore = async (payload: HistoryPayload) => {
+    const current: HistoryPayload = payload.mode === "single" ? { mode: "single", singleText, singleType } : { mode: "multi", multiText, multiType, multiMode };
+    const hasDraft = !!(payload.mode === "single" ? singleText.trim() : multiText.trim());
+    if (hasDraft && !isSamePayload(current, payload) && !await confirmAction("Replace this code draft with the selected history entry?")) return;
+    if (payload.mode === "single") {
+      setSingleText(payload.singleText ?? ""); setSingleType(payload.singleType ?? "QR Code"); setLastSavedSingle(payload); setTab("single"); setSingleRefresh(value => value + 1);
     } else {
-      if (p.multiMode) setMultiMode(p.multiMode);
-      if (p.multiType) setMultiType(p.multiType);
-      if (p.multiText !== undefined) setMultiText(p.multiText);
-      setLastSavedMulti(p);
-      setSelectedTab("multi");
-      setGenerationRefreshToken((g) => g + 1);
+      setMultiText(payload.multiText ?? ""); setMultiType(payload.multiType ?? "QR Code"); setMultiMode(payload.multiMode ?? "lines"); setLastSavedMulti(payload); setTab("multi"); setMultiRefresh(value => value + 1);
     }
-
-    toast("History state loaded into editor");
+    if (params.has("entry")) setParams({}, { replace: true });
+    toast.success("History entry loaded");
   };
-
-  return (
-    <div className="p-4 h-full w-full md:overflow-hidden overflow-y-auto">
-      <Tabs
-        value={selectedTab}
-        onValueChange={setSelectedTab}
-        className="h-full flex flex-col"
-      >
-        <div className="flex justify-between">
-          <TabsList className="w-fit mb-4">
-            <TabsTrigger value="single" className="w-[200px]">
-              Single
-            </TabsTrigger>
-            <TabsTrigger value="multi">Multi</TabsTrigger>
-          </TabsList>
-          <Button
-            variant={selectedTab === "history" ? "secondary" : "ghost"}
-            className="flex gap-2"
-            onClick={() => {
-              setSelectedTab("history");
-            }}
-          >
-            <History className="h-6 w-6" />
-            History
-          </Button>
-        </div>
-
-        <TabsContent value="single" className="h-full flex-1">
-          <SingleCodeTab
-            refreshToken={generationRefreshToken}
-            singleText={singleText}
-            singleType={singleType}
-            onChangeText={setSingleText}
-            onChangeType={setSingleType}
-            onSaveHistory={saveHistoryToDb}
-            lastSavedSingle={lastSavedSingle}
-            onLastSavedSingle={setLastSavedSingle}
-          />
-        </TabsContent>
-
-        <TabsContent value="multi" className="h-full flex-1">
-          <MultiCodeTab
-            refreshToken={generationRefreshToken}
-            multiText={multiText}
-            multiType={multiType}
-            multiMode={multiMode}
-            onChangeText={setMultiText}
-            onChangeType={setMultiType}
-            onChangeMode={setMultiMode}
-            onSaveHistory={saveHistoryToDb}
-            lastSavedMulti={lastSavedMulti}
-            onLastSavedMulti={setLastSavedMulti}
-          />
-        </TabsContent>
-
-        <TabsContent value="history" className="h-full flex-1">
-          <CodegenHistory
-            refreshToken={historyRefreshToken}
-            onLoadState={handleLoadStateFromHistory}
-          />
-        </TabsContent>
-      </Tabs>
-    </div>
-  );
+  return <div className="tool-page"><WorkspaceHeading title="Barcodes & QR" description="Generate, inspect, and export codes without leaving your workspace." />
+    <Tabs value={tab} onValueChange={setTab} className="min-h-0 flex-1 gap-4">
+      <TabsList aria-label="Code workspace"><TabsTrigger value="single"><QrCode />Single</TabsTrigger><TabsTrigger value="multi"><Layers />Batch</TabsTrigger><TabsTrigger value="history"><History />History</TabsTrigger></TabsList>
+      <TabsContent forceMount value="single" className="min-h-0 data-[state=inactive]:hidden"><SingleCodeTab refreshToken={singleRefresh} singleText={singleText} singleType={singleType} onChangeText={setSingleText} onChangeType={setSingleType} onSaveHistory={saveHistory} lastSavedSingle={lastSavedSingle} onLastSavedSingle={setLastSavedSingle} /></TabsContent>
+      <TabsContent forceMount value="multi" className="min-h-0 data-[state=inactive]:hidden"><MultiCodeTab refreshToken={multiRefresh} multiText={multiText} multiType={multiType} multiMode={multiMode} onChangeText={setMultiText} onChangeType={setMultiType} onChangeMode={setMultiMode} onSaveHistory={saveHistory} lastSavedMulti={lastSavedMulti} onLastSavedMulti={setLastSavedMulti} /></TabsContent>
+      <TabsContent value="history" className="min-h-0"><CodegenHistory refreshToken={historyRefresh} onLoadState={payload => void restore(payload)} initialSelectedId={entryId ? Number(entryId) : undefined} /></TabsContent>
+    </Tabs>
+  </div>;
 }

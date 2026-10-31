@@ -10,7 +10,7 @@ import { validateImage } from './image-input';
 import { recognizeScreenshot } from './recognize';
 
 interface Draft { key: string; summary: string; jiraType: JiraType | null; branchType: string }
-export function ScreenshotCapture({ onApply }: { onApply: (draft: Draft) => void }) {
+export function ScreenshotCapture({ onApply }: { onApply: (draft: Draft) => boolean | void | Promise<boolean | void> }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState('');
@@ -104,9 +104,9 @@ export function ScreenshotCapture({ onApply }: { onApply: (draft: Draft) => void
       event.target.value = '';
       if (file) void start(file);
     }} />
-    <div className="flex shrink-0 flex-wrap items-center gap-3 rounded-lg border border-dashed p-3" onDragOver={event => event.preventDefault()} onDrop={drop}>
-      <Button variant="outline" onClick={select} disabled={busy}><ImagePlus aria-hidden="true" /> Import Jira screenshot</Button>
-      <p className="text-sm text-muted-foreground">Paste a screenshot with Cmd+V / Ctrl+V, or drop a PNG or JPEG here.</p>
+    <div className="capture-strip" onDragOver={event => event.preventDefault()} onDrop={drop}>
+      <Button variant="outline" size="sm" onClick={select} disabled={busy}><ImagePlus aria-hidden="true" />From screenshot</Button>
+      <p className="text-muted-foreground">Paste or drop a Jira screenshot. Recognition stays local.</p>
     </div>
     <Dialog open={open} onOpenChange={value => { if (!value) close(); }}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl" onDragOver={event => event.preventDefault()} onDrop={drop}>
@@ -151,7 +151,7 @@ export function ScreenshotCapture({ onApply }: { onApply: (draft: Draft) => void
           <Button variant="outline" onClick={close}>Cancel</Button>
           {!busy && <Button variant="outline" onClick={select}>Choose image</Button>}
           {!busy && error && image.current && <Button variant="outline" onClick={() => { if (image.current) void start(image.current); }}>Retry</Button>}
-          {!busy && draft && <Button disabled={!isIssueKey(draft.key) || !draft.summary.trim()} onClick={() => { onApply({ ...draft, summary: draft.summary.trim() }); close(); }}>Apply to task form</Button>}
+          {!busy && draft && <Button disabled={!isIssueKey(draft.key) || !draft.summary.trim()} onClick={async () => { if (await onApply({ ...draft, summary: draft.summary.trim() }) !== false) close(); }}>Apply to task form</Button>}
         </div>
       </DialogContent>
     </Dialog>

@@ -1,275 +1,39 @@
-// src/components/code-generator/SingleCodeTab.tsx
-"use client";
-
-import { useEffect, useState } from "react";
-import {
-  ResizablePanelGroup,
-  ResizablePanel,
-  ResizableHandle,
-} from "@/components/ui/resizable";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useEffect, useRef } from "react";
+import { WandSparkles, LoaderCircle } from "lucide-react";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { Button } from "@/components/ui/button";
-import { Copy, Download } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { useBarcode } from "@/hooks/use-barcode";
-import {
-  CODE_TYPES,
-  CODE_TYPE_TO_KIND,
-  CodeKind,
-  CodeType,
-  HistoryPayload,
-} from "@/components/code-generator/codegen-types";
-import {
-  copySvgFromDataUrl,
-  downloadPngFromDataUrl,
-  downloadSvgFromDataUrl,
-  getImageStyleForType,
-  getSinglePlaceholder,
-  isSamePayload,
-} from "@/lib/barcode-utils";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
-import { Textarea } from "../ui/textarea";
-import { AnimatedActionButton } from "../animated-action-button";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { CODE_TYPES, type CodeType, type HistoryPayload } from "./codegen-types";
+import { getSinglePlaceholder, isSamePayload } from "@/lib/barcode-utils";
+import { CodePreview } from "./CodePreview";
 
-interface SingleCodeTabProps {
-  singleText: string;
-  singleType: CodeType;
-  lastSavedSingle: HistoryPayload | null;
-  refreshToken: number;
-  onChangeText: (value: string) => void;
-  onChangeType: (value: CodeType) => void;
-  onSaveHistory: (payload: HistoryPayload) => Promise<void>;
-  onLastSavedSingle: (value: HistoryPayload | null) => void;
+interface Props {
+  singleText: string; singleType: CodeType; lastSavedSingle: HistoryPayload | null; refreshToken: number;
+  onChangeText: (value: string) => void; onChangeType: (value: CodeType) => void;
+  onSaveHistory: (payload: HistoryPayload) => Promise<boolean>; onLastSavedSingle: (value: HistoryPayload | null) => void;
 }
-
-export function SingleCodeTab(props: SingleCodeTabProps) {
-  const {
-    singleText,
-    singleType,
-    lastSavedSingle,
-    refreshToken,
-    onChangeText,
-    onChangeType,
-    onSaveHistory,
-    onLastSavedSingle,
-  } = props;
-
-  const {
-    src: singleSrc,
-    svgSrc: singleSvgSrc,
-    error: singleError,
-    generate: generateSingleBarcode,
-  } = useBarcode();
-
-  const [previewScale, setPreviewScale] = useState(1); // per-tab slider
-
+export function SingleCodeTab({ singleText, singleType, lastSavedSingle, refreshToken, onChangeText, onChangeType, onSaveHistory, onLastSavedSingle }: Props) {
+  const { result, error, busy, generate } = useBarcode();
+  const mobile = useIsMobile();
   const generateSingle = async () => {
-    if (!singleText.trim()) return;
-
-    const kind = CODE_TYPE_TO_KIND[singleType];
-    const format = singleType === "Code128" ? "png" : "svg";
-
-    generateSingleBarcode(kind as CodeKind, singleText, format);
-
-    const payload: HistoryPayload = {
-      mode: "single",
-      singleType,
-      singleText,
-    };
-
-    // ❗ Only save if different from last saved single payload
-    if (!isSamePayload(lastSavedSingle, payload)) {
-      await onSaveHistory(payload);
-      onLastSavedSingle(payload);
-    }
+    if (!singleText.trim() || busy) return;
+    const payload: HistoryPayload = { mode: "single", singleType, singleText };
+    const generated = await generate(singleType, singleText);
+    if (generated && !isSamePayload(lastSavedSingle, payload) && await onSaveHistory(payload)) onLastSavedSingle(payload);
   };
-
-  useEffect(() => {
-    generateSingle();
-  }, [refreshToken]);
-
-  const Left = (
-    <Card className="h-full flex flex-col">
-      <CardHeader>
-        <CardTitle>Single Code</CardTitle>
-      </CardHeader>
-
-      <CardContent className="flex flex-col gap-4 border-t p-2">
-        <div className="relative">
-          <Textarea
-            className="min-h-[140px] font-mono text-xs"
-            placeholder={getSinglePlaceholder(singleType)}
-            value={singleText}
-            onChange={(e) => onChangeText(e.target.value)}
-          />
-          <div className="absolute bottom-2 right-2 text-xs text-muted-foreground bg-background/80 px-1.5 py-0.5 rounded">
-            {singleText.length}
-          </div>
-        </div>
-        <div className="flex w-full gap-2">
-          <Button onClick={generateSingle} className="flex-1">
-            Generate
-          </Button>
-          <Select
-            value={singleType}
-            onValueChange={(e) => onChangeType(e as CodeType)}
-          >
-            <SelectTrigger>
-              <SelectValue className="w-60" placeholder="Code type" />
-            </SelectTrigger>
-            <SelectContent>
-              {CODE_TYPES.map((t) => (
-                <SelectItem value={t}>{t}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {singleError && (
-          <p className="text-sm text-red-500 mt-2">
-            Error: {singleError.toString()}
-          </p>
-        )}
-
-        {singleType === "Code128" && (
-          <p className="text-xs text-muted-foreground">
-            Format: GS1 AIs like <code>(01)</code>, <code>(10)</code>, etc.
-            Example: <code>(01)09501101530008(10)ABC123</code>
-          </p>
-        )}
-
-        {singleType === "EAN-13" && (
-          <p className="text-xs text-muted-foreground">
-            Must be a 13-digit numeric EAN (with check digit).
-          </p>
-        )}
-      </CardContent>
-    </Card>
-  );
-
-  const Right = (
-    <Card className="h-full flex flex-col overflow-hidden">
-      <CardHeader className="flex items-center justify-between gap-4">
-        <CardTitle>Preview</CardTitle>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">Size</span>
-          <input
-            type="range"
-            min={50}
-            max={300}
-            value={previewScale * 100}
-            onChange={(e) => setPreviewScale(Number(e.target.value) / 100)}
-            className="w-32"
-          />
-          <span className="text-xs text-muted-foreground">
-            {Math.round(previewScale * 100)}%
-          </span>
-        </div>
-      </CardHeader>
-
-      <CardContent className="flex flex-col items-center gap-4 flex-1 overflow-auto">
-        {!singleSrc && (
-          <p className="text-muted-foreground">No code generated.</p>
-        )}
-
-        {singleSrc && (
-          <>
-            <div className="border bg-white p-4">
-              <img
-                src={singleSrc}
-                alt="Generated code"
-                style={getImageStyleForType(singleType, previewScale)}
-              />
-            </div>
-
-            <p className="text-sm text-muted-foreground break-all text-center">
-              {singleText}
-            </p>
-
-            <div className="flex flex-wrap gap-2 justify-center">
-              <AnimatedActionButton
-                onAction={async () => {
-                  // For Code128, generate SVG on-demand if currently showing PNG
-                  if (singleType === "Code128" && singleSrc?.startsWith("data:image/png;base64,")) {
-                    const kind = CODE_TYPE_TO_KIND[singleType];
-                    try {
-                      const { invoke } = await import("@tauri-apps/api/core");
-                      const { sanitizeBarcodeInput } = await import("@/lib/utils");
-                      const result = await invoke<string>("generate_barcode", {
-                        kind,
-                        data: sanitizeBarcodeInput(singleText),
-                        format: "svg",
-                      });
-                      downloadSvgFromDataUrl(result, singleText || "code");
-                    } catch (e: any) {
-                      const { toast } = await import("sonner");
-                      toast.error(e?.toString() ?? "Failed to generate SVG");
-                    }
-                  } else {
-                    downloadSvgFromDataUrl(singleSrc!, singleText || "code");
-                  }
-                }}
-                label="SVG"
-                Icon={Download}
-                doneLabel="Saved"
-              />
-
-              <AnimatedActionButton
-                onAction={() =>
-                  downloadPngFromDataUrl(singleSrc!, singleText || "code")
-                }
-                label="PNG"
-                Icon={Download}
-                doneLabel="Saved"
-              />
-
-              <AnimatedActionButton
-                onAction={async () => {
-                  // For Code128, use pre-generated SVG if available
-                  if (singleType === "Code128" && singleSvgSrc) {
-                    await copySvgFromDataUrl(singleSvgSrc);
-                  } else {
-                    await copySvgFromDataUrl(singleSrc!);
-                  }
-                }}
-                label="Copy SVG"
-                Icon={Copy}
-                doneLabel="Copied"
-              />
-            </div>
-          </>
-        )}
-      </CardContent>
-    </Card>
-  );
-
-  return (
-    <>
-      {/* Desktop: resizable split */}
-      <div className="hidden md:block h-full">
-        <ResizablePanelGroup direction="horizontal" className="h-full">
-          <ResizablePanel defaultSize={40} minSize={30}>
-            <div className="h-full pr-3 overflow-hidden">{Left}</div>
-          </ResizablePanel>
-
-          <ResizableHandle />
-
-          <ResizablePanel defaultSize={60} minSize={30}>
-            <div className="h-full pl-3 overflow-hidden">{Right}</div>
-          </ResizablePanel>
-        </ResizablePanelGroup>
-      </div>
-
-      {/* Mobile: stacked */}
-      <div className="block md:hidden space-y-4">
-        {Left}
-        {Right}
-      </div>
-    </>
-  );
+  const generateRef = useRef(generateSingle); generateRef.current = generateSingle;
+  useEffect(() => { if (refreshToken > 0) void generateRef.current(); }, [refreshToken]);
+  const source = <section className="pane h-full"><div className="pane-heading"><h2>Code details</h2><span className="text-xs text-muted-foreground">Single code</span></div><div className="pane-body flex flex-col gap-5">
+    <div className="field"><label id="single-type-label">Code format</label><Select value={singleType} disabled={busy} onValueChange={value => onChangeType(value as CodeType)}><SelectTrigger aria-labelledby="single-type-label"><SelectValue /></SelectTrigger><SelectContent>{CODE_TYPES.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}</SelectContent></Select></div>
+    <div className="field"><label htmlFor="single-code-text">Value to encode</label><Textarea id="single-code-text" className="h-40 min-h-40 max-h-64 font-mono text-sm" placeholder={getSinglePlaceholder(singleType)} value={singleText} disabled={busy} onChange={event => onChangeText(event.target.value)} /><p className="field-hint text-right tabular-nums">{singleText.length.toLocaleString()} characters</p></div>
+    <p className="field-hint">{singleType === "EAN-13" ? "Enter 12 digits to calculate the check digit, or 13 digits to validate an existing EAN." : singleType === "Code128" ? "Use a GS1 payload, for example (01)09501101530008(10)ABC123." : singleType === "QR Code" ? "Encode a URL or text. Generated images can be copied or exported as SVG or PNG." : "Encode text or a GS1 payload in a compact DataMatrix code."}</p>
+    {error && <p role="alert" className="inline-notice error-notice">{error}</p>}
+    <Button className="self-start" onClick={() => void generateSingle()} disabled={!singleText.trim() || busy}>{busy ? <LoaderCircle className="animate-spin" /> : <WandSparkles />}{busy ? "Generating…" : "Generate code"}</Button>
+  </div><div className="pane-footer">Successful generations are saved in local history.</div></section>;
+  return <ResizablePanelGroup key={mobile ? "vertical" : "horizontal"} direction={mobile ? "vertical" : "horizontal"} className={mobile ? "min-h-[1000px]" : "h-full"}>
+    <ResizablePanel defaultSize={mobile ? 58 : 38} minSize={28}><div className={mobile ? "h-full pb-2" : "h-full pr-2"}>{source}</div></ResizablePanel><ResizableHandle withHandle /><ResizablePanel defaultSize={mobile ? 42 : 62} minSize={30}><div className={mobile ? "h-full pt-2" : "h-full pl-2"}><CodePreview result={result} busy={busy} stale={!!result && (result.text !== singleText || result.type !== singleType)} /></div></ResizablePanel>
+  </ResizablePanelGroup>;
 }
