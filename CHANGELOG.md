@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.3.0 (2026-10-31)
+
 - Align Format and Diff toolbar layouts and editor surfaces, with matching panel headers, Copy actions, selectors, and Clear controls.
 
 - Add a JSON format option with local Monaco highlighting/validation, two-space indentation, precision-preserving output, and the existing Copy/Clear/shortcut controls. Rename the tool to Text Formatter while retaining `/xaml`.
@@ -16,7 +18,13 @@
 - Bundle English OCR assets for offline recognition; support progress, cancellation, retry, and bounded image sizes.
 - Preserve optional Jira issue type separately from Git branch type, migrate existing task databases transactionally, and support legacy 1.0/current 1.1 task backups.
 
-## 0.2.0 (unreleased)
+### Upgrade notes
+
+- Existing task data is migrated to add an optional Jira issue type. Export task and code histories before upgrading; retain backups before rolling back to an older app.
+- Screenshot recognition uses a bundled English OCR model; review extracted issue details before saving.
+- Installer upgrade/data-retention checks remain required on each release target before publishing. Updater signatures do not replace platform signing/notarization.
+
+## 0.2.0 (2026-10-30)
 
 - Add About & updates with current version, explicit update checks, release notes, download progress, install/restart, and retry controls.
 - Notify once per app session when a background check finds an update; keep installation explicit and failed background checks quiet.
