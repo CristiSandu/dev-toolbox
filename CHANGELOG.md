@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add local Jira screenshot capture through clipboard paste, PNG/JPEG selection, and drag/drop, with editable review before applying to the task form.
+- Bundle English OCR assets for offline recognition; support progress, cancellation, retry, and bounded image sizes.
+- Preserve optional Jira issue type separately from Git branch type, migrate existing task databases transactionally, and support legacy 1.0/current 1.1 task backups.
+
 ## 0.2.0 (unreleased)
 
 - Add About & updates with current version, explicit update checks, release notes, download progress, install/restart, and retry controls.

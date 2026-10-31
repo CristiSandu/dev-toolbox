@@ -52,6 +52,7 @@ This produces native binaries / installers in `src-tauri/target/release/` accord
 ```bash
 npm run check:versions
 npm test
+npm run test:ocr
 npm run build
 cargo test --locked --manifest-path src-tauri/Cargo.toml
 ```
@@ -79,6 +80,7 @@ If macOS flags the app as coming from an unidentified developer:
 
 ### 1. Task Generator
 A comprehensive task management tool for developers working with Git workflows:
+- **Paste Jira screenshots** from the clipboard with Cmd+V / Ctrl+V, or select/drop PNG/JPEG files; review local OCR suggestions before saving ([usage and limits](docs/SCREENSHOT_CAPTURE.md))
 - **Store tasks** in a local SQLite database
 - **Generate consistent Git branch names** from task metadata (supports `feature`, `bugfix`, `hotfix` types)
 - **Generate PR titles** automatically from task number and name

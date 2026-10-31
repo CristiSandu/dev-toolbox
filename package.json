@@ -15,7 +15,10 @@
     "version:set": "node scripts/versions.mjs set",
     "baseline:formatter": "node --experimental-strip-types scripts/benchmark-formatter.mjs",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "predev": "node scripts/prepare-ocr-assets.mjs",
+    "prebuild": "node scripts/prepare-ocr-assets.mjs",
+    "test:ocr": "node scripts/prepare-ocr-assets.mjs && node --experimental-strip-types scripts/smoke-ocr.mjs"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.12",
@@ -34,6 +37,7 @@
     "@tauri-apps/plugin-opener": "^2",
     "@tauri-apps/plugin-process": "^2.4.0",
     "@tauri-apps/plugin-updater": "^2.14.1",
+    "@tesseract.js-data/eng": "^1.0.0",
     "ace-builds": "^1.43.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -47,6 +51,7 @@
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^4.1.17",
+    "tesseract.js": "^6.0.1",
     "vkbeautify": "^0.99.3"
   },
   "devDependencies": {
