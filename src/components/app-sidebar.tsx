@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { Home, GitBranch, Braces, QrCode } from "lucide-react";
+import { Home, GitBranch, Braces, QrCode, ClipboardList } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AppUpdates } from "@/features/updater/AppUpdates";
@@ -9,6 +9,7 @@ export const tools = [
   { to: "/task", label: "Tasks", description: "Branch names and PR titles", icon: GitBranch, shortcut: "1" },
   { to: "/xaml", label: "Text tools", description: "Format XML/JSON and compare text", icon: Braces, shortcut: "2" },
   { to: "/codes", label: "Barcodes & QR", description: "Single codes and batches", icon: QrCode, shortcut: "3" },
+  { to: "/test-plans", label: "Test Plans", description: "Test cases and product code lists", icon: ClipboardList, shortcut: "4" },
 ];
 
 export function AppSidebar() {

@@ -1,7 +1,7 @@
 import { useLocation, Link } from "react-router-dom";
 import { Laptop, ChevronRight } from "lucide-react";
 
-const titles: Record<string, string> = { "/": "Workspace", "/task": "Tasks", "/xaml": "Text tools", "/codes": "Barcodes & QR" };
+const titles: Record<string, string> = { "/": "Workspace", "/task": "Tasks", "/xaml": "Text tools", "/codes": "Barcodes & QR", "/test-plans": "Test Plans" };
 export function AppHeader() {
   const { pathname } = useLocation();
   return <header className="app-header">

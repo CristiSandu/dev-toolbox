@@ -11,7 +11,7 @@ function App() {
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
       if (!(event.metaKey || event.ctrlKey) || event.altKey || event.shiftKey) return;
-      const route = ({ "0": "/", "1": "/task", "2": "/xaml", "3": "/codes" } as Record<string, string>)[event.key];
+      const route = ({ "0": "/", "1": "/task", "2": "/xaml", "3": "/codes", "4": "/test-plans" } as Record<string, string>)[event.key];
       if (route) { event.preventDefault(); navigate(route); }
     };
     window.addEventListener("keydown", handler);
