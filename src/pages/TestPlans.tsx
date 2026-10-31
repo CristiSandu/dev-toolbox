@@ -62,6 +62,7 @@ import {
   type TransferDocument,
 } from "@/features/test-plans/model";
 import "@/features/test-plans/test-plans.css";
+import { McpSettings } from "@/features/test-plans/McpSettings";
 
 export default function TestPlans() {
   const [projects, setProjects] = useState<TestProject[]>([]),
@@ -811,6 +812,7 @@ export default function TestPlans() {
         title="Test Plans"
         description="Describe your cases. Prepare products. Keep every change."
       >
+        <McpSettings />
         <Button
           variant="outline"
           disabled={disabled || !isTauri()}

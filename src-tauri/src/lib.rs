@@ -2,6 +2,9 @@ mod barcodes;
 mod codegen_history;
 mod commands;
 mod db;
+mod mcp;
+mod mcp_settings;
+pub use mcp::run as run_mcp;
 mod test_plans;
 
 #[tauri::command]
@@ -25,6 +28,8 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             greet,
+            mcp_settings::get_mcp_setup,
+            mcp_settings::check_mcp_connection,
             test_plans::list_test_projects,
             test_plans::save_test_project,
             test_plans::delete_test_project,

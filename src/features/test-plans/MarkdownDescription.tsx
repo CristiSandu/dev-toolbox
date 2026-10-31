@@ -37,6 +37,7 @@ export function MarkdownDescription({ source }: { source: string }) {
           ),
           img: ({ src, alt }) => (
             <ProductImage
+              zoomable
               src={typeof src === "string" ? src : ""}
               title={alt || "Description image"}
             />

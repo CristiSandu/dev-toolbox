@@ -1,4 +1,5 @@
 [package]
+default-run = "dev-toolbox"
 name = "dev-toolbox"
 version = "0.3.1"
 description = "A Tauri App"
@@ -19,6 +20,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
+dirs = "6"
 tauri = { version = "2", features = [] }
 tauri-plugin-opener = "2"
 tauri-plugin-dialog = "2"

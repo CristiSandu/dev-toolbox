@@ -55,19 +55,19 @@ export function markdownPdf(source: string): Content[] {
       case "heading":
         return {
           text: children.map(inline),
-          fontSize: [22, 18, 15, 13, 12, 11][node.depth - 1],
+          fontSize: [14, 12, 10, 9, 8.5, 8][node.depth - 1],
           bold: true,
-          margin: [0, 12, 0, 8],
+          margin: [0, 4, 0, 2],
         };
       case "paragraph":
-        return { text: children.map(inline), margin: [0, 0, 0, 9] };
+        return { text: children.map(inline), margin: [0, 0, 0, 2] };
       case "code":
         return {
           text: node.value,
-          fontSize: 9,
+          fontSize: 7.5,
           background: "#eef1f4",
           preserveLeadingSpaces: true,
-          margin: [8, 4, 8, 12],
+          margin: [6, 2, 6, 4],
         };
       case "list": {
         const items = node.children.map((item): Content => ({
@@ -79,8 +79,8 @@ export function markdownPdf(source: string): Content[] {
           ],
         }));
         return node.ordered
-          ? { ol: items, start: node.start ?? 1, margin: [0, 0, 0, 10] }
-          : { ul: items, margin: [0, 0, 0, 10] };
+          ? { ol: items, start: node.start ?? 1, margin: [0, 0, 0, 2] }
+          : { ul: items, margin: [0, 0, 0, 2] };
       }
       case "table":
         return {
@@ -92,26 +92,26 @@ export function markdownPdf(source: string): Content[] {
                 text: cell.children.map(inline),
                 bold: index === 0,
                 fillColor: index === 0 ? "#eef1f4" : undefined,
-                margin: [3, 4, 3, 4],
+                margin: [2, 2, 2, 2],
               })),
             ),
           },
           layout: "lightHorizontalLines",
-          fontSize: 9,
-          margin: [0, 4, 0, 12],
+          fontSize: 7.5,
+          margin: [0, 2, 0, 4],
         };
       case "blockquote":
         return {
           stack: children.map(block),
           italics: true,
           color: "#526170",
-          margin: [16, 0, 0, 10],
+          margin: [10, 0, 0, 3],
         };
       case "thematicBreak":
         return {
           text: "________________________________________",
           color: "#aab3bd",
-          margin: [0, 6, 0, 12],
+          margin: [0, 3, 0, 4],
         };
       case "html":
         return "";
@@ -211,6 +211,12 @@ export function pdfEntryColumns(
   return columns;
 }
 
+function codeValueCaption(value: string, available: number): string {
+  const characters = Array.from(value.replace(/\s+/g, " "));
+  const limit = Math.min(64, Math.max(16, Math.floor(available / 4)));
+  return characters.length <= limit ? characters.join("") : characters.slice(0, limit - 1).join("") + "…";
+}
+
 function productCard(
   product: Product,
   asset: PdfProductAsset | undefined,
@@ -222,8 +228,10 @@ function productCard(
   const maxScale =
     available / (geometry.width + 2 * geometry.quiet * geometry.unit);
   const targetScale = geometry.matrix
-    ? 72 / Math.max(geometry.width, geometry.height)
-    : maxScale;
+    ? (codesOnly ? 72 : 56) / Math.max(geometry.width, geometry.height)
+    : codesOnly
+      ? maxScale
+      : Math.min(180 / geometry.width, 42 / geometry.height);
   const scale = Math.min(
     maxScale,
     Math.max(targetScale, geometry.minimumScale),
@@ -236,9 +244,7 @@ function productCard(
       ? {
           ...(asset.svg
             ? {
-                svg: codesOnly
-                  ? asset.svg.replace(/<text\b[^>]*>[\s\S]*?<\/text>/gi, "")
-                  : asset.svg,
+                svg: asset.svg.replace(/<text\b[^>]*>[\s\S]*?<\/text>/gi, ""),
               }
             : { image: asset.png! }),
           alignment: codesOnly ? "center" : "left",
@@ -262,8 +268,14 @@ function productCard(
     return {
       header: {
         unbreakable: true,
-        stack: [
+        columns: [{ width: available, stack: [
           code,
+          {
+            text: codeValueCaption(product.text, available),
+            fontSize: 7,
+            alignment: "center",
+            margin: [0, 2, 0, 3],
+          },
           {
             text: product.title || "Untitled product",
             fontSize: 9,
@@ -271,7 +283,7 @@ function productCard(
             alignment: "center",
             margin: [0, 3, 0, 5],
           },
-        ],
+        ] }],
       } as Content,
       details: [] as Content[],
     };
@@ -284,10 +296,11 @@ function productCard(
             width: "*",
             stack: [
               {
+                id: `tp-product-${number}`,
                 text: `${number}. ${product.title || "Product"}`,
                 fontSize: 10,
                 bold: true,
-                margin: [0, 0, 0, 3],
+                margin: [0, 0, 0, 2],
               },
               {
                 text: product.type,
@@ -357,15 +370,15 @@ export function buildCasePdf(
   const content: Content[] = codesOnly
     ? []
     : [
-        { text: source.title, fontSize: 20, bold: true, margin: [0, 0, 0, 6] },
+        { text: source.title, fontSize: 16, bold: true, margin: [0, 0, 0, 4] },
         {
           text: `${projectName}  |  ${count} entries across ${source.lists.length} lists`,
           color: "#526170",
           fontSize: 9,
-          margin: [0, 0, 0, 12],
+          margin: [0, 0, 0, 6],
         },
         ...(source.descriptionMarkdown
-          ? markdownPdf(source.descriptionMarkdown)
+          ? [{ stack: markdownPdf(source.descriptionMarkdown), fontSize: 8, lineHeight: 1.05 } as Content]
           : []),
       ];
   let entryNumber = 0;
@@ -376,10 +389,10 @@ export function buildCasePdf(
     if (!codesOnly)
       content.push({
         text: `${list.name}  -  ${list.products.length} entries`,
-        fontSize: 13,
+        fontSize: 11,
         bold: true,
-        margin: [0, 12, 0, 7],
-        headlineLevel: 1,
+        margin: [0, 8, 0, 4],
+        headlineLevel: list.products.length ? 1 : undefined,
       });
     if (!list.products.length)
       content.push({ text: "No entries in this list.", color: "#526170" });
@@ -407,7 +420,7 @@ export function buildCasePdf(
           stack: [card.header, ...card.details],
           fontSize: 8,
           lineHeight: 1.1,
-          margin: [0, 7, 0, 8],
+          margin: [0, 4, 0, 5],
         });
         index++;
         continue;
@@ -463,7 +476,7 @@ export function buildCasePdf(
     content,
     pageBreakBefore: (node, queries) =>
       node.headlineLevel === 1 &&
-      queries.getFollowingNodesOnPage().length === 0,
+      !queries.getFollowingNodesOnPage().some((following) => following.id?.startsWith("tp-product-")),
     footer: codesOnly
       ? undefined
       : (page, pages) => ({

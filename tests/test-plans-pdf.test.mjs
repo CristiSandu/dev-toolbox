@@ -152,7 +152,7 @@ test("compact PDF rows keep whole entries together without forcing a fresh page 
   assert.ok(!document.content.some((node) => node.pageBreak === "before"));
 });
 
-test("codes-only PDF contains codes and titles underneath without case text, images, metadata or encoded labels", () => {
+test("codes-only PDF contains value captions and titles without case text, images or duplicate SVG labels", () => {
   const { source, assets } = fixture();
   const first = source.lists[0].products[0];
   assets.set(first.id, {
@@ -177,6 +177,7 @@ test("codes-only PDF contains codes and titles underneath without case text, ima
     assert.ok(!body.includes(excluded), excluded);
   assert.ok(body.includes("EAN-13 must be 12 or 13 digits"));
   assert.ok(body.indexOf('"svg"') < body.indexOf("First duplicate"));
+  assert.ok(body.includes(first.text));
   assert.equal(document.footer, undefined);
   assert.ok(!document.content.some((node) => node.headlineLevel));
 });
@@ -189,4 +190,58 @@ test("codes-only layout ignores omitted descriptions and URLs when choosing colu
   };
   assert.equal(pdfEntryColumns(product, { svg }), 1);
   assert.equal(pdfEntryColumns(product, { svg }, true), 4);
+});
+
+
+test("codes-only value captions preserve short values and shorten long payloads for every format", async () => {
+  const source = newCase();
+  source.lists[0].products = ["EAN-13", "Code128", "DataMatrix", "QR Code"].map((type, index) => ({
+    id: `caption-${index}`, title: type, text: index === 0 ? "4006381333931" : "ABCDEFGHIJ".repeat(20), type, imageUrl: "", description: "",
+  }));
+  const assets = new Map(source.lists[0].products.map(product => [product.id, { svg }]));
+  const document = buildCasePdf(source, "Project", assets, true);
+  const captions = [];
+  function visit(value) {
+    if (!value || typeof value !== "object") return;
+    if (value.fontSize === 7 && value.alignment === "center") captions.push(value.text);
+    for (const item of Object.values(value)) visit(item);
+  }
+  visit(document.content);
+  assert.equal(captions.length, 4);
+  assert.equal(captions[0], "4006381333931");
+  for (const caption of captions.slice(1)) {
+    assert.ok(caption.startsWith("ABCDEFGHIJ"));
+    assert.ok(caption.endsWith("…"));
+    assert.ok(caption.length <= 64);
+  }
+  const pdfMake = (await import("pdfmake/build/pdfmake.js")).default;
+  pdfMake.addFontContainer((await import("pdfmake/build/fonts/Roboto.js")).default);
+  const bytes = await pdfMake.createPdf(document).getBuffer();
+  assert.equal(Buffer.from(bytes).subarray(0, 5).toString(), "%PDF-");
+});
+
+test("full export keeps a substantial structured description on one page", async () => {
+  const source = newCase();
+  source.descriptionMarkdown = Array.from({ length: 8 }, (_, i) =>
+    `## Test section ${i + 1}\n\n${'Verify the expected product value and record the result. '.repeat(7)}\n\n- Confirm the expected value.\n- Record the actual value.`,
+  ).join('\n\n');
+  const pdfMake = (await import('pdfmake/build/pdfmake.js')).default;
+  pdfMake.addFontContainer((await import('pdfmake/build/fonts/Roboto.js')).default);
+  const bytes = await pdfMake.createPdf(buildCasePdf(source, 'Project', new Map())).getBuffer();
+  assert.equal((Buffer.from(bytes).toString('latin1').match(/\/Type \/Page\b/g) || []).length, 1);
+});
+
+test("full export limits sparse codes instead of enlarging them to fill a wide row", () => {
+  const source = newCase();
+  source.lists[0].products = [{ id: 'p', title: 'Wide detail entry', type: 'EAN-13', text: '4006381333931', imageUrl: '', description: 'Details '.repeat(70) }];
+  const document = buildCasePdf(source, 'Project', new Map([['p', { svg: svg.replaceAll('width="100"', 'width="190"') }]]));
+  const images = [];
+  function visit(node) {
+    if (!node || typeof node !== 'object') return;
+    if (node.svg) images.push(node);
+    Object.values(node).forEach(visit);
+  }
+  visit(document.content);
+  assert.equal(images.length, 1);
+  assert.ok(images[0].width < 200);
 });

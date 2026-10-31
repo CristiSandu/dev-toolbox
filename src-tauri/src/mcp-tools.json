@@ -1,0 +1,644 @@
+[
+  {
+    "name": "list_test_projects",
+    "description": "List saved test plan projects.",
+    "inputSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {},
+      "required": []
+    }
+  },
+  {
+    "name": "save_test_project",
+    "description": "Create (omit id) or rename a project.",
+    "inputSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ]
+    }
+  },
+  {
+    "name": "delete_test_project",
+    "description": "Delete a project and ALL its cases and revision history.",
+    "inputSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id"
+      ]
+    }
+  },
+  {
+    "name": "list_test_cases",
+    "description": "Read all saved cases, including full content and current revision.",
+    "inputSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {},
+      "required": []
+    }
+  },
+  {
+    "name": "save_test_case",
+    "description": "Create or update a case. For creation omit id and use expectedRevision=0. For updates read current content and revision first. Replace the complete document; preserve IDs to track edits. Supports Markdown, lists, products, ordering, duplicate/copy, and restoring a revision snapshot.",
+    "inputSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "projectId": {
+          "type": "integer"
+        },
+        "expectedRevision": {
+          "type": "integer"
+        },
+        "content": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "title": {
+              "type": "string"
+            },
+            "descriptionMarkdown": {
+              "type": "string"
+            },
+            "lists": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 100,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "products": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "title": {
+                          "type": "string"
+                        },
+                        "text": {
+                          "type": "string"
+                        },
+                        "imageUrl": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "enum": [
+                            "QR Code",
+                            "EAN-13",
+                            "DataMatrix",
+                            "Code128"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "title",
+                        "text",
+                        "type",
+                        "imageUrl",
+                        "description"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "id",
+                  "name",
+                  "products"
+                ]
+              }
+            }
+          },
+          "required": [
+            "schemaVersion",
+            "title",
+            "descriptionMarkdown",
+            "lists"
+          ]
+        }
+      },
+      "required": [
+        "projectId",
+        "expectedRevision",
+        "content"
+      ]
+    }
+  },
+  {
+    "name": "delete_test_case",
+    "description": "Delete a case and its revision history.",
+    "inputSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id"
+      ]
+    }
+  },
+  {
+    "name": "get_test_case_revisions",
+    "description": "Read revision snapshots and change summaries. Restore by saving a snapshot against the CURRENT revision.",
+    "inputSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "caseId": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "caseId"
+      ]
+    }
+  },
+  {
+    "name": "export_test_project",
+    "description": "Export a project as portable JSON to a local file.",
+    "inputSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "projectId": {
+          "type": "integer"
+        },
+        "filePath": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "projectId",
+        "filePath"
+      ]
+    }
+  },
+  {
+    "name": "export_test_case",
+    "description": "Export a case document as portable JSON to a local file.",
+    "inputSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "content": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "schemaVersion": {
+              "const": 1
+            },
+            "title": {
+              "type": "string"
+            },
+            "descriptionMarkdown": {
+              "type": "string"
+            },
+            "lists": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 100,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "products": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "title": {
+                          "type": "string"
+                        },
+                        "text": {
+                          "type": "string"
+                        },
+                        "imageUrl": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "enum": [
+                            "QR Code",
+                            "EAN-13",
+                            "DataMatrix",
+                            "Code128"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "title",
+                        "text",
+                        "type",
+                        "imageUrl",
+                        "description"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "id",
+                  "name",
+                  "products"
+                ]
+              }
+            }
+          },
+          "required": [
+            "schemaVersion",
+            "title",
+            "descriptionMarkdown",
+            "lists"
+          ]
+        },
+        "filePath": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "content",
+        "filePath"
+      ]
+    }
+  },
+  {
+    "name": "read_test_plan_import",
+    "description": "Read and validate portable JSON before importing.",
+    "inputSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "filePath": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "filePath"
+      ]
+    }
+  },
+  {
+    "name": "import_test_plan",
+    "description": "Import portable JSON as new copies. Project documents create a new project; case documents require projectId or newProjectName.",
+    "inputSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "document": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "format": {
+              "const": "dev-toolbox-test-plans"
+            },
+            "version": {
+              "const": 1
+            },
+            "project": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "cases": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "schemaVersion": {
+                        "const": 1
+                      },
+                      "title": {
+                        "type": "string"
+                      },
+                      "descriptionMarkdown": {
+                        "type": "string"
+                      },
+                      "lists": {
+                        "type": "array",
+                        "minItems": 1,
+                        "maxItems": 100,
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "products": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "properties": {
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "title": {
+                                    "type": "string"
+                                  },
+                                  "text": {
+                                    "type": "string"
+                                  },
+                                  "imageUrl": {
+                                    "type": "string"
+                                  },
+                                  "description": {
+                                    "type": "string"
+                                  },
+                                  "type": {
+                                    "enum": [
+                                      "QR Code",
+                                      "EAN-13",
+                                      "DataMatrix",
+                                      "Code128"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "title",
+                                  "text",
+                                  "type",
+                                  "imageUrl",
+                                  "description"
+                                ]
+                              }
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "name",
+                            "products"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "schemaVersion",
+                      "title",
+                      "descriptionMarkdown",
+                      "lists"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "name",
+                "cases"
+              ]
+            },
+            "testCase": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "schemaVersion": {
+                  "const": 1
+                },
+                "title": {
+                  "type": "string"
+                },
+                "descriptionMarkdown": {
+                  "type": "string"
+                },
+                "lists": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 100,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "products": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "title": {
+                              "type": "string"
+                            },
+                            "text": {
+                              "type": "string"
+                            },
+                            "imageUrl": {
+                              "type": "string"
+                            },
+                            "description": {
+                              "type": "string"
+                            },
+                            "type": {
+                              "enum": [
+                                "QR Code",
+                                "EAN-13",
+                                "DataMatrix",
+                                "Code128"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "title",
+                            "text",
+                            "type",
+                            "imageUrl",
+                            "description"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "name",
+                      "products"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "schemaVersion",
+                "title",
+                "descriptionMarkdown",
+                "lists"
+              ]
+            }
+          },
+          "required": [
+            "format",
+            "version"
+          ],
+          "oneOf": [
+            {
+              "required": [
+                "project"
+              ],
+              "not": {
+                "required": [
+                  "testCase"
+                ]
+              }
+            },
+            {
+              "required": [
+                "testCase"
+              ],
+              "not": {
+                "required": [
+                  "project"
+                ]
+              }
+            }
+          ]
+        },
+        "projectId": {
+          "type": "integer"
+        },
+        "newProjectName": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "document"
+      ]
+    }
+  },
+  {
+    "name": "fetch_test_product_image",
+    "description": "Fetch a product image as a data URL.",
+    "inputSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "url": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "url"
+      ]
+    }
+  },
+  {
+    "name": "save_test_case_pdf",
+    "description": "Save a client-generated PDF to a local file. bytes is an array of PDF bytes; this does not render a case.",
+    "inputSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "filePath": {
+          "type": "string"
+        },
+        "bytes": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      },
+      "required": [
+        "filePath",
+        "bytes"
+      ]
+    }
+  },
+  {
+    "name": "generate_barcode",
+    "description": "Generate a product barcode as a data URL. DataMatrix supports SVG only.",
+    "inputSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "qr",
+            "ean13",
+            "datamatrix",
+            "code128"
+          ]
+        },
+        "data": {
+          "type": "string"
+        },
+        "format": {
+          "enum": [
+            "svg",
+            "png"
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "data",
+        "format"
+      ]
+    }
+  }
+]

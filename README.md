@@ -471,3 +471,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **Built with ❤️ using Tauri 2 and React 19**
+
+### MCP access for agents
+
+Test Plans exposes a local stdio MCP server with project/case editing, history, JSON transfer, barcode generation, and PDF export.
+See [setup, tools, and current limits](docs/mcp.md).
