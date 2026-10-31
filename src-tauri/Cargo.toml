@@ -1,7 +1,7 @@
 [package]
 default-run = "dev-toolbox"
 name = "dev-toolbox"
-version = "0.3.1"
+version = "0.3.2"
 description = "A Tauri App"
 authors = ["Cristian Sandu"]
 license = "MIT"

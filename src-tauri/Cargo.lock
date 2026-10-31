@@ -932,7 +932,7 @@ dependencies = [
 
 [[package]]
 name = "dev-toolbox"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "barcoders",
  "base64 0.22.1",
