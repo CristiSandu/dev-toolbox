@@ -6,17 +6,18 @@
 
 - Add a local stdio MCP server for saved Test Plans: projects, cases, ordered lists and products, Markdown descriptions, revision history, JSON import/export, image fetching, and barcode generation. Agent writes use the same validation, transactions, and revision conflict checks as the app.
 - Add full-case and codes-only PDF export through the Node MCP entrypoint, including embedded PNG/JPEG product images and explicit counts for unavailable images and failed codes.
-- Add Test Plans → MCP settings with detected executable paths, copyable client configuration, native/PDF tool selection, and a temporary connection check that verifies the MCP handshake.
+- Add Test Plans → MCP settings with detected executable paths, copyable installed-client configuration, and a temporary connection check that verifies the MCP handshake.
 - Open product preview and Markdown images in an enlarged, keyboard-accessible popup.
 - Print values beneath codes in codes-only PDFs, preserving short values and shortening long payloads. Keep captions and titles centered in wide rows.
 - Compact full-case PDFs with smaller description headings, tighter spacing, and bounded code sizing. Keep list headings with the following product and remove duplicate SVG value labels.
 - Use the Node PDF engine for MCP exports so PNG images render without browser worker dependencies.
+- Ship the native MCP server, a private runtime, PDF dependencies, fonts, and third-party notices inside the installers. All fifteen tools work without developer tools or a source checkout; CI verifies a relocated installation with Node removed from PATH.
 
 ### Upgrade notes
 
 - Keep the existing application identifier and data directory. This release adds no database migration or Test Plans JSON format change.
 - MCP clients launch and own stdio server processes; the app's connection status reports a temporary check, not active agent connections. Agents can modify/delete saved plans and read/write import/export files. Unsaved app drafts are not exposed; reload saved cases after external edits.
-- The MCP executable is currently built separately from the GUI installers. Build `dev-toolbox-mcp` and follow [MCP setup](docs/mcp.md). PDF-enabled MCP access additionally requires Node 22.12+, the source checkout, and npm dependencies. WebP/GIF product images are omitted from MCP PDFs and counted as unavailable.
+- Copy the installed configuration from MCP settings once to switch an existing source-checkout connection to the installed server. Future app updates keep that configuration valid while the installation path stays the same; reconnect the agent client after updating. WebP/GIF product images are omitted from MCP PDFs and counted as unavailable.
 - Smaller codes retain minimum module widths and quiet margins, but physical scanner readability and installer upgrade/data-retention checks still require verification on each release target before publishing.
 
 ## 0.3.1 (2026-10-31)

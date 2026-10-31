@@ -1,5 +1,9 @@
 fn main() {
     tauri_build::build();
+    println!(
+        "cargo:rustc-env=DEV_TOOLBOX_TARGET={}",
+        std::env::var("TARGET").unwrap()
+    );
 
     if std::env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("windows")
         && std::env::var("CARGO_CFG_TARGET_ENV").as_deref() == Ok("msvc")

@@ -1,7 +1,7 @@
 // MCP entrypoint adds the app's shared PDF renderer to the native tool set.
 import { spawn } from 'node:child_process';
 import { createInterface } from 'node:readline';
-import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
 import pdfMake from 'pdfmake';
 import fonts from 'pdfmake/build/fonts/Roboto.js';
 import { buildCasePdf } from '../src/features/test-plans/pdf-document.ts';
@@ -9,8 +9,9 @@ for (const [name, font] of Object.entries(fonts.vfs)) pdfMake.virtualfs.writeFil
 pdfMake.addFonts(fonts.fonts);
 pdfMake.setUrlAccessPolicy(() => false);
 pdfMake.setLocalAccessPolicy(() => false);
-const executable = process.argv[2] ?? fileURLToPath(new URL('../src-tauri/target/debug/dev-toolbox-mcp', import.meta.url));
-const child = spawn(executable, process.argv.slice(3), { stdio: ['pipe', 'pipe', 'inherit'] });
+async function main() {
+const executable = process.argv[2] ?? resolve(dirname(process.argv[1]), '../src-tauri/target/debug/dev-toolbox-mcp');
+const child = spawn(executable, [...process.argv.slice(3), '--native'], { stdio: ['pipe', 'pipe', 'inherit'], windowsHide: true });
 let sequence = 0;
 const pending = new Map();
 child.on('error', error => { console.error(error.message); process.exit(1); });
@@ -91,3 +92,6 @@ try {
     process.stdout.write(JSON.stringify({ ...response, jsonrpc: '2.0', id: request.id }) + '\n');
   }
 } finally { child.stdin.end(); }
+
+}
+main().catch(error => { console.error(error.message); process.exitCode = 1; });

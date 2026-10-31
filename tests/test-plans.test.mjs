@@ -123,6 +123,8 @@ test("the description renderer formats GFM and removes raw HTML and executable U
   const { renderToStaticMarkup } = await import("react-dom/server");
   const server = await createServer({
     server: { middlewareMode: true },
+    // SSR does not need browser dependency scanning (including generated installer assets).
+    optimizeDeps: { noDiscovery: true, include: [] },
     appType: "custom",
   });
   try {

@@ -58,11 +58,15 @@ for await (const line of createInterface({input:process.stdin})) {
 
 test('MCP settings configuration preserves executable paths and arguments', async () => {
   const { mcpClientConfig } = await import('../src/features/test-plans/mcp-config.ts');
-  const setup = { nativePath: 'C:\\My Tools\\dev-toolbox-mcp.exe', bridgePath: '/my checkout/scripts/test-plans-mcp.mjs' };
-  const native = JSON.parse(mcpClientConfig(setup, false, 'node')).mcpServers['dev-toolbox'];
-  assert.equal(native.command, setup.nativePath);
-  assert.deepEqual(native.args, []);
-  const pdf = JSON.parse(mcpClientConfig(setup, true, '/my node/bin/node')).mcpServers['dev-toolbox'];
-  assert.equal(pdf.command, '/my node/bin/node');
-  assert.deepEqual(pdf.args, ['--experimental-strip-types', setup.bridgePath, setup.nativePath]);
+  const setup = { executablePath: 'C:\\My Tools\\dev-toolbox-mcp.exe', available: true, development: false };
+  const config = JSON.parse(mcpClientConfig(setup)).mcpServers['dev-toolbox'];
+  assert.equal(config.command, setup.executablePath);
+  assert.deepEqual(config.args, []);
+});
+
+
+test('packaging rejects private runtimes that would depend on developer-installed macOS libraries', async () => {
+  const { validateMacRuntimeDependencies } = await import('../scripts/prepare-mcp-bundle.mjs');
+  assert.doesNotThrow(() => validateMacRuntimeDependencies('/node (architecture arm64):\n\t/usr/lib/libSystem.B.dylib (compatibility version 1)\n\t/System/Library/Frameworks/Security.framework/Security (compatibility version 1)'));
+  assert.throws(() => validateMacRuntimeDependencies('/node:\n\t/opt/homebrew/opt/icu4c/lib/libicu.dylib (compatibility version 1)'), /official standalone Node/);
 });

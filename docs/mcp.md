@@ -1,52 +1,80 @@
 # Test Plans MCP server
 
-## Configure from the desktop app
+## Connect an installed app
 
-Open **Test Plans → MCP settings**. The panel detects the native server beside the
-app executable and the optional PDF bridge in the source checkout. Choose native
-tools or PDF support, then use **Check connection** to start a temporary server,
-verify its MCP handshake, and close it. **Copy** provides client configuration
-with the detected absolute paths. Paste it into your MCP client and reconnect.
-For PDF support, you can enter an absolute Node executable path when the desktop
-app's PATH does not include Node.
+Install Dev Toolbox, then open **Test Plans → MCP settings**. All fifteen tools,
+including full-case and codes-only PDF export, are included in the installation.
+You do not need Node, Rust, npm, or the source checkout.
 
-The status is the result of the last check, not a count of connected agents.
-Stdio server processes are started and owned by each agent client. The desktop
-panel does not keep a background HTTP server running. If the server binary is
-missing, the panel shows the expected path and build command. Packaged GUI
-releases must include a sibling `dev-toolbox-mcp` executable (with `.exe` on
-Windows), or use a separately built server with manual client configuration.
+Use **Check connection** to verify a temporary server, then **Copy** its client
+configuration and paste it into your MCP client. The client starts the server
+automatically. The app can be closed while agents use its saved Test Plans.
+No port or HTTP server needs to be started.
 
-## Manual setup
-
-Run `npm install` first (Node 22.12+ is required). Build the local stdio server (Rust and the platform's Tauri build dependencies are required):
-
-```sh
-cargo build --manifest-path src-tauri/Cargo.toml --bin dev-toolbox-mcp
-```
-
-Add this entry to any MCP client that supports stdio, replacing the absolute path:
+For a standard macOS installation, the configuration is:
 
 ```json
 {
   "mcpServers": {
     "dev-toolbox": {
-      "command": "node",
-      "args": ["--experimental-strip-types", "/absolute/path/dev-toolbox/scripts/test-plans-mcp.mjs"]
+      "command": "/Applications/dev-toolbox.app/Contents/MacOS/dev-toolbox-mcp",
+      "args": []
     }
   }
 }
 ```
 
-The script defaults to the native debug binary in this checkout. To use a release
-binary, build with `--release` and pass its absolute path as the script's next
-argument. Use an absolute Node executable path if your client does not inherit PATH.
-Keep the checkout and npm dependencies available to the script.
+On Windows, use the `dev-toolbox-mcp.exe` path copied by the installed app.
+If a client presents separate fields, choose STDIO, put the executable path in
+Command, leave Arguments and Environment variables empty, and leave Working
+directory empty. No system PATH configuration is required.
 
-The native binary can also be configured directly as the MCP command with no
-arguments, but it omits the additional PDF rendering tool.
-No web server, port, credentials, or running app is required. The server negotiates MCP
-2024-11-05 through 2025-11-25 and writes only protocol messages to stdout.
+The status reports the last check, not active agent connections. Stdio processes
+are owned by the clients that launch them. App updates replace the bundled MCP
+server, private runtime, and PDF renderer together. Keep the app at the same
+installation path and reconnect your MCP client after an update. If you move the
+app, copy the new configuration. Existing connections pointing to a source
+checkout continue to use that checkout; replace them once with the installed
+configuration to follow app updates.
+
+## Development and packaging
+
+Developers need the usual app prerequisites and Node 22.12+. After `npm ci`, run:
+
+```sh
+npm run build:mcp
+```
+
+This builds the native helper and stages its matching private runtime and bundled
+renderer. Development MCP settings can then use those staged files. The source
+entrypoint remains usable with system Node:
+
+```sh
+node --experimental-strip-types scripts/test-plans-mcp.mjs /absolute/path/to/dev-toolbox-mcp
+```
+
+`dev-toolbox-mcp --native` is the internal fourteen-tool backend used by the PDF
+bridge; the public command without arguments always requires the complete bundled
+runtime and exposes fifteen tools. It fails clearly if components are missing.
+
+Build installers through `npm run tauri build -- ...`. The npm wrapper prepares
+the matching native sidecars, bundles all PDF JavaScript dependencies and fonts,
+and applies `src-tauri/tauri.mcp.conf.json` to package them. Build on a native
+runner for each supported target; the script refuses to copy a runtime with the
+wrong architecture. A direct `npx tauri build` bypasses this packaging step.
+Third-party notices and the runtime version are included under the app's `mcp`
+resources. Keep private runtime security updates part of the regular app release
+process; changing a system Node installation does not change the bundled runtime.
+
+CI runs `scripts/smoke-installed-mcp.mjs` against the packaged macOS helper and the
+Windows staging layout. It relocates components to a directory containing spaces,
+clears Node from PATH, uses an isolated database, and checks discovery, all barcode
+formats, PNG product images, both PDF modes, revisions/conflicts, and JSON transfer.
+For an explicit isolated MCP profile, set `DEV_TOOLBOX_MCP_DATABASE` to a database
+file path; omit it for the normal app database. Tests never write to installed data.
+
+The server negotiates MCP 2024-11-05 through 2025-11-25 and writes only protocol
+messages to stdout.
 
 ## Tools
 
@@ -55,7 +83,7 @@ No web server, port, credentials, or running app is required. The server negotia
 - History: `get_test_case_revisions`.
 - Portable JSON: `export_test_project`, `export_test_case`, `read_test_plan_import`, `import_test_plan`.
 - Assets: `generate_barcode`, `fetch_test_product_image`, `save_test_case_pdf`.
-- PDF rendering (Node entrypoint): `export_test_case_pdf` with `caseId`, `filePath`, and optional `codesOnly`.
+- PDF rendering: `export_test_case_pdf` with `caseId`, `filePath`, and optional `codesOnly`.
 
 Tool discovery supplies complete input schemas. `save_test_case` accepts the complete
 case document, including Markdown, ordered lists, and ordered products with IDs,

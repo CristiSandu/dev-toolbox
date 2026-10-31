@@ -1,8 +1,9 @@
 use serde::Serialize;
 use serde_json::{json, Value};
+#[cfg(debug_assertions)]
+use std::path::PathBuf;
 use std::{
     io::Write,
-    path::PathBuf,
     process::{Command, Stdio},
     time::{Duration, Instant},
 };
@@ -10,11 +11,9 @@ use std::{
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct McpSetup {
-    native_path: String,
-    native_available: bool,
-    bridge_path: String,
-    bridge_available: bool,
-    node_command: String,
+    executable_path: String,
+    available: bool,
+    development: bool,
 }
 fn setup() -> Result<McpSetup, String> {
     let executable = std::env::current_exe().map_err(|e| e.to_string())?;
@@ -26,23 +25,22 @@ fn setup() -> Result<McpSetup, String> {
         } else {
             "dev-toolbox-mcp"
         });
-    let bridge = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../scripts/test-plans-mcp.mjs");
-    let bridge = bridge.canonicalize().unwrap_or(bridge);
-    let node_name = if cfg!(windows) { "node.exe" } else { "node" };
-    let node = std::env::var_os("PATH")
-        .and_then(|paths| {
-            std::env::split_paths(&paths)
-                .map(|p| p.join(node_name))
-                .find(|p| p.is_file())
-        })
-        .map(|p| p.to_string_lossy().into_owned())
-        .unwrap_or_else(|| node_name.into());
+    #[cfg(debug_assertions)]
+    let native = if !native.is_file() {
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join(".mcp-bundle")
+            .join(format!(
+                "dev-toolbox-mcp-{}{}",
+                env!("DEV_TOOLBOX_TARGET"),
+                if cfg!(windows) { ".exe" } else { "" }
+            ))
+    } else {
+        native
+    };
     Ok(McpSetup {
-        native_available: native.is_file(),
-        native_path: native.to_string_lossy().into_owned(),
-        bridge_available: bridge.is_file(),
-        bridge_path: bridge.to_string_lossy().into_owned(),
-        node_command: node,
+        available: native.is_file() && crate::mcp_runtime::runtime_paths(&native).is_ok(),
+        executable_path: native.to_string_lossy().into_owned(),
+        development: cfg!(debug_assertions),
     })
 }
 #[tauri::command]
@@ -50,46 +48,33 @@ pub fn get_mcp_setup() -> Result<McpSetup, String> {
     setup()
 }
 
-fn connection_command(
-    info: &McpSetup,
-    pdf: bool,
-    node: &str,
-) -> Result<(String, Vec<String>), String> {
-    if !info.native_available {
-        return Err("Build dev-toolbox-mcp first, then reopen MCP settings.".into());
-    }
-    if pdf {
-        if !info.bridge_available {
-            return Err("The PDF bridge needs the source checkout. Use Native tools or restore the checkout.".into());
-        }
-        if node.trim().is_empty() {
-            return Err("Enter the path to your Node executable.".into());
-        }
-        Ok((
-            node.into(),
-            vec![
-                "--experimental-strip-types".into(),
-                info.bridge_path.clone(),
-                info.native_path.clone(),
-            ],
-        ))
-    } else {
-        Ok((info.native_path.clone(), vec![]))
-    }
-}
 #[tauri::command]
-pub async fn check_mcp_connection(pdf: bool, node: String) -> Result<(), String> {
+pub async fn check_mcp_connection() -> Result<(), String> {
     tauri::async_runtime::spawn_blocking(move || {
         let info = setup()?;
-        let (command, args) = connection_command(&info, pdf, &node)?;
-        probe(&command, &args)
+        if !info.available {
+            return Err("MCP components are missing. Repair or reinstall Dev Toolbox.".into());
+        }
+        probe(&info.executable_path, &[])
     })
     .await
     .map_err(|e| e.to_string())?
 }
 fn probe(command: &str, args: &[String]) -> Result<(), String> {
-    let mut child = Command::new(command).args(args).stdin(Stdio::piped()).stdout(Stdio::piped())
-        .stderr(Stdio::null()).spawn().map_err(|e| format!("Could not start MCP server: {e}. Check the executable path and install Node dependencies for PDF export."))?;
+    let mut process = Command::new(command);
+    process
+        .args(args)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null());
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        process.creation_flags(0x08000000); // CREATE_NO_WINDOW for the temporary settings check.
+    }
+    let mut child = process.spawn().map_err(|e| {
+        format!("Could not start the installed MCP server: {e}. Repair or reinstall Dev Toolbox.")
+    })?;
     let requests = [
         json!({"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"dev-toolbox-settings","version":"1"}}}),
         json!({"jsonrpc":"2.0","method":"notifications/initialized"}),
@@ -118,7 +103,11 @@ fn probe(command: &str, args: &[String]) -> Result<(), String> {
             result => {
                 let _ = child.kill();
                 let _ = child.wait();
-                return Err(match result { Err(e) => e.to_string(), _ => "MCP check timed out. Verify the Node executable and rebuild the native server.".into() });
+                return Err(match result {
+                    Err(e) => e.to_string(),
+                    _ => "MCP check timed out. Close any stuck MCP processes and retry the check."
+                        .into(),
+                });
             }
         }
     }
@@ -140,32 +129,11 @@ fn validate_probe(success: bool, bytes: &[u8]) -> Result<(), String> {
     {
         return Ok(());
     }
-    Err("The server did not complete an MCP handshake. Rebuild dev-toolbox-mcp; for PDF export, verify Node 22.12+ and run npm install in the checkout.".into())
+    Err("The installed MCP server did not complete a handshake. Repair or reinstall Dev Toolbox and retry.".into())
 }
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[test]
-    fn setup_commands_require_installed_components_and_keep_paths_as_arguments() {
-        let mut info = McpSetup {
-            native_path: "/a path/server".into(),
-            native_available: false,
-            bridge_path: "/a path/bridge.mjs".into(),
-            bridge_available: true,
-            node_command: "node".into(),
-        };
-        assert!(connection_command(&info, false, "node").is_err());
-        info.native_available = true;
-        assert_eq!(
-            connection_command(&info, false, "node").unwrap(),
-            (info.native_path.clone(), vec![])
-        );
-        let (_, args) = connection_command(&info, true, "/node path/node").unwrap();
-        assert_eq!(args[1], info.bridge_path);
-        assert_eq!(args[2], info.native_path);
-        info.bridge_available = false;
-        assert!(connection_command(&info, true, "node").is_err());
-    }
     #[test]
     fn probe_requires_a_successful_handshake_and_ping() {
         let bytes = b"{\"id\":1,\"result\":{\"serverInfo\":{\"name\":\"dev-toolbox-test-plans\"}}}\n{\"id\":2,\"result\":{}}\n";

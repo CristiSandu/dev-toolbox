@@ -3,8 +3,10 @@ mod codegen_history;
 mod commands;
 mod db;
 mod mcp;
+mod mcp_runtime;
 mod mcp_settings;
 pub use mcp::run as run_mcp;
+pub use mcp_runtime::launch as launch_mcp;
 mod test_plans;
 
 #[tauri::command]

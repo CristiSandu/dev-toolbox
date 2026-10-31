@@ -159,10 +159,14 @@ impl Session {
 }
 /// Runs without creating a window or requiring the GUI to be running.
 pub fn run() -> Result<(), String> {
-    let path = dirs::data_dir()
+    let default_path = dirs::data_dir()
         .ok_or("Cannot locate application data directory")?
         .join("com.sanduilie-cristian.dev-toolbox")
         .join("tasks.db");
+    // Explicit override supports isolated profiles and installation smoke tests.
+    let path = std::env::var_os("DEV_TOOLBOX_MCP_DATABASE")
+        .map(std::path::PathBuf::from)
+        .unwrap_or(default_path);
     let mut conn = crate::db::open_db(&path).map_err(|e| e.to_string())?;
     conn.busy_timeout(std::time::Duration::from_secs(5))
         .map_err(|e| e.to_string())?;

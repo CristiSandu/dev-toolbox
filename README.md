@@ -474,5 +474,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### MCP access for agents
 
-Test Plans exposes a local stdio MCP server with project/case editing, history, JSON transfer, barcode generation, and PDF export.
+The installed app includes a local stdio MCP server with project/case editing, history, JSON transfer, barcode generation, and PDF export. Open **Test Plans → MCP settings** to copy its configuration. No separate Node installation or source checkout is required.
 See [setup, tools, and current limits](docs/mcp.md).
