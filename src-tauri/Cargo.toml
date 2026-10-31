@@ -1,6 +1,6 @@
 [package]
 name = "dev-toolbox"
-version = "0.3.0"
+version = "0.3.1"
 description = "A Tauri App"
 authors = ["Cristian Sandu"]
 license = "MIT"
@@ -30,6 +30,8 @@ quickcodes = "0.1"
 datamatrix = "0.3"
 base64 = "0.22"
 urlencoding = "2.1"
+reqwest = { version = "0.13", default-features = false, features = ["rustls-no-provider"] }
+rustls = { version = "0.23", default-features = false, features = ["ring"] }
 barcoders = { version = "2", features = ["svg", "image"] }
 
 [dev-dependencies]

@@ -19,9 +19,10 @@ pub(crate) fn open_db(db_path: &Path) -> Result<Connection> {
     }
 
     let mut conn = Connection::open(db_path)?;
+    conn.pragma_update(None, "foreign_keys", true)?;
     let transaction = conn.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)?;
     let version: i64 = transaction.query_row("PRAGMA user_version", [], |row| row.get(0))?;
-    if version > 1 {
+    if version > 2 {
         return Err(rusqlite::Error::InvalidQuery);
     }
 
@@ -53,6 +54,26 @@ pub(crate) fn open_db(db_path: &Path) -> Result<Connection> {
         transaction.execute("ALTER TABLE tasks ADD COLUMN jira_issue_type TEXT", [])?;
         transaction.pragma_update(None, "user_version", 1)?;
     }
+    if version < 2 {
+        transaction.execute_batch(
+            "CREATE TABLE test_projects (
+            id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL,
+            created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
+          CREATE TABLE test_cases (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER NOT NULL REFERENCES test_projects(id) ON DELETE CASCADE,
+            content_json TEXT NOT NULL, revision INTEGER NOT NULL,
+            created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
+          CREATE INDEX test_cases_project ON test_cases(project_id);
+          CREATE TABLE test_case_revisions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            case_id INTEGER NOT NULL REFERENCES test_cases(id) ON DELETE CASCADE,
+            revision INTEGER NOT NULL, snapshot_json TEXT NOT NULL,
+            changes_json TEXT NOT NULL, created_at TEXT NOT NULL,
+            UNIQUE(case_id, revision));",
+        )?;
+        transaction.pragma_update(None, "user_version", 2)?;
+    }
     transaction.commit()?;
     Ok(conn)
 }
@@ -83,8 +104,48 @@ mod tests {
             assert_eq!(
                 conn.query_row("PRAGMA user_version", [], |row| row.get::<_, i64>(0))
                     .unwrap(),
+                2
+            );
+        }
+    }
+
+    #[test]
+    fn version_one_migrates_with_existing_data_and_enables_relationships() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("v1.db");
+        {
+            let conn = Connection::open(&path).unwrap();
+            conn.execute_batch("CREATE TABLE tasks (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, number TEXT NOT NULL, feature_type TEXT NOT NULL, branch TEXT NOT NULL, pr_title TEXT NOT NULL, created_at TEXT NOT NULL, jira_issue_type TEXT);
+              CREATE TABLE codegen_history (id INTEGER PRIMARY KEY AUTOINCREMENT, mode TEXT NOT NULL, summary TEXT NOT NULL, payload TEXT NOT NULL, created_at TEXT NOT NULL);
+              INSERT INTO tasks VALUES (1,'Task','DEV-1','bugfix','branch','PR','now','Bug');
+              INSERT INTO codegen_history VALUES (1,'single','Saved code','{}','now');
+              PRAGMA user_version = 1;").unwrap();
+        }
+        for _ in 0..2 {
+            let conn = open_db(&path).unwrap();
+            assert_eq!(
+                conn.query_row("PRAGMA user_version", [], |r| r.get::<_, i64>(0))
+                    .unwrap(),
+                2
+            );
+            assert_eq!(
+                conn.query_row("PRAGMA foreign_keys", [], |r| r.get::<_, i64>(0))
+                    .unwrap(),
                 1
             );
+            assert_eq!(
+                conn.query_row("SELECT jira_issue_type FROM tasks", [], |r| r
+                    .get::<_, String>(0))
+                    .unwrap(),
+                "Bug"
+            );
+            assert_eq!(
+                conn.query_row("SELECT summary FROM codegen_history", [], |r| r
+                    .get::<_, String>(0))
+                    .unwrap(),
+                "Saved code"
+            );
+            assert!(conn.execute("INSERT INTO test_cases (project_id,content_json,revision,created_at,updated_at) VALUES (999,'{}',1,'now','now')", []).is_err());
         }
     }
 
@@ -93,7 +154,7 @@ mod tests {
         let directory = tempfile::tempdir().unwrap();
         let path = directory.path().join("future.db");
         let conn = Connection::open(&path).unwrap();
-        conn.pragma_update(None, "user_version", 2).unwrap();
+        conn.pragma_update(None, "user_version", 3).unwrap();
         assert!(open_db(&path).is_err());
         assert_eq!(
             conn.query_row(

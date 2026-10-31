@@ -3,16 +3,12 @@
 import type { CSSProperties } from "react";
 import { toast } from "sonner";
 import {
-    CODE_TYPE_TO_KIND,
-    CODE_TYPES,
-    CodeKind,
     CodeType,
-    HistoryPayload,
 } from "@/components/code-generator/codegen-types";
 
 // ---------- SVG → PNG ----------
 export const svgToPng = async (svgString: string): Promise<Blob> => {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
         const img = new Image();
         const svgBlob = new Blob([svgString], { type: "image/svg+xml" });
         const url = URL.createObjectURL(svgBlob);
@@ -22,19 +18,21 @@ export const svgToPng = async (svgString: string): Promise<Blob> => {
             canvas.width = img.width * 2;
             canvas.height = img.height * 2;
 
-            const ctx = canvas.getContext("2d")!;
+            const ctx = canvas.getContext("2d");
+            if (!ctx) { URL.revokeObjectURL(url); reject(new Error("Could not prepare PNG export.")); return; }
             ctx.fillStyle = "#FFFFFF";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.imageSmoothingEnabled = false;
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
             canvas.toBlob((blob) => {
-                if (blob) resolve(blob);
+                if (blob) resolve(blob); else reject(new Error("Could not create the PNG image."));
             }, "image/png");
 
             URL.revokeObjectURL(url);
         };
 
+        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Could not read this code image. Generate it again.")); };
         img.src = url;
     });
 };
@@ -70,11 +68,10 @@ export const isSvgDataUrl = (dataUrl: string): boolean => {
 
 export const copySvgFromDataUrl = async (dataUrl: string) => {
     if (isPngDataUrl(dataUrl)) {
-        toast.error("Cannot copy SVG from PNG data. Please use SVG format.");
-        return;
+        throw new Error("SVG is not available. Generate the code again.");
     }
     const svg = dataUrlToSvgString(dataUrl);
-    if (!svg) return;
+    if (!svg) throw new Error("The generated SVG is empty. Generate the code again.");
     await navigator.clipboard.writeText(svg);
     toast("SVG copied to clipboard");
 };
@@ -82,12 +79,11 @@ export const copySvgFromDataUrl = async (dataUrl: string) => {
 export const downloadSvgFromDataUrl = (dataUrl: string, filename?: string) => {
     // Handle PNG data URLs - can't convert to SVG, so show error
     if (isPngDataUrl(dataUrl)) {
-        toast.error("Cannot export PNG as SVG. Please generate with SVG format.");
-        return;
+        throw new Error("SVG is not available. Generate the code again.");
     }
 
     const svg = dataUrlToSvgString(dataUrl);
-    if (!svg) return;
+    if (!svg) throw new Error("The generated SVG is empty. Generate the code again.");
 
     const blob = new Blob([svg], { type: "image/svg+xml" });
     const url = URL.createObjectURL(blob);
@@ -131,7 +127,7 @@ export const downloadPngFromDataUrl = async (
 
     // Handle SVG data URLs - convert to PNG
     const svg = dataUrlToSvgString(dataUrl);
-    if (!svg) return;
+    if (!svg) throw new Error("The generated SVG is empty. Generate the code again.");
 
     const blob = await svgToPng(svg);
     const url = URL.createObjectURL(blob);
@@ -151,7 +147,7 @@ export const getSinglePlaceholder = (type: CodeType): string => {
         case "QR Code":
             return "https://example.com / free text";
         case "EAN-13":
-            return "13-digit EAN (e.g. 5901234123457)";
+            return "12 or 13 digits (e.g. 5901234123457)";
         case "DataMatrix":
             return "Free text / GS1 payload";
         case "Code128":
@@ -166,7 +162,7 @@ export const getMultiPlaceholderLines = (type: CodeType): string => {
         case "QR Code":
             return "One text/URL per line";
         case "EAN-13":
-            return "One 13-digit EAN per line";
+            return "One 12- or 13-digit EAN per line";
         case "DataMatrix":
             return "One value per line";
         case "Code128":
@@ -198,31 +194,6 @@ export const getImageStyleForType = (
 };
 
 // ---------- Type normalizer ----------
-export const normalizeType = (
-    raw: string
-): { uiType: CodeType; kind: CodeKind } | null => {
-    const v = raw.trim().toLowerCase();
+export { normalizeType } from "./code-input";
 
-    for (const uiType of CODE_TYPES) {
-        if (uiType.toLowerCase() === v) {
-            return { uiType, kind: CODE_TYPE_TO_KIND[uiType] };
-        }
-    }
-
-    const kindValues: CodeKind[] = ["qr", "ean13", "datamatrix", "code128"];
-    if (kindValues.includes(v as CodeKind)) {
-        const kind = v as CodeKind;
-        const uiType = CODE_TYPES.find((t) => CODE_TYPE_TO_KIND[t] === kind)!;
-        return { uiType, kind };
-    }
-
-    return null;
-};
-
-export const isSamePayload = (
-    a: HistoryPayload | null,
-    b: HistoryPayload | null
-): boolean => {
-    if (!a || !b) return false;
-    return JSON.stringify(a) === JSON.stringify(b);
-};
+export { isSamePayload } from "./code-input";

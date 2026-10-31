@@ -932,14 +932,16 @@ dependencies = [
 
 [[package]]
 name = "dev-toolbox"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "barcoders",
  "base64 0.22.1",
  "chrono",
  "datamatrix",
  "quickcodes",
+ "reqwest",
  "rusqlite",
+ "rustls",
  "serde",
  "serde_json",
  "tauri",

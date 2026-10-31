@@ -127,6 +127,24 @@ A versatile barcode and QR code generation tool:
   - **Export/Import history** - Export all history entries to JSON file or import history from a previously exported JSON file
 - Adjustable preview size for better readability
 
+### 4. Test Plans
+
+- Create projects and test cases in the right-side project explorer (`Cmd/Ctrl+4`).
+- Write case descriptions in Markdown, with formatted previews, tables, task lists, and code blocks.
+- Switch between **Description** and **Test List** while keeping your draft and product selection.
+- Add multiple named product lists using individual rows, line batches, or JSON with `text`, `type`, `title`, `imageUrl`, and `description`.
+- Inspect generated codes beside product images and export codes as SVG/PNG or copy SVG.
+- Save cases locally with revision history, change summaries, and historical content views. Unsaved changes are protected when navigating or closing the window.
+- Product images appear in a compact corner thumbnail; codes fit the available canvas. Hide the Projects sidebar for more room, or open a code full screen (Escape closes it).
+- Share a whole project from its explorer menu, or use **Export case** for just the current case content (including unsaved edits). **Import JSON** previews the file and lets you choose a destination for a single case. Imports always create new copies; they never overwrite existing cases.
+- JSON preserves Markdown, lists, product values/formats, titles, descriptions, and image URLs. Revision history, generated code images, and downloaded product images are not included; codes regenerate locally and image URLs require network access. Imported cases start at revision 1. Files support up to 20 MB and projects up to 1,000 cases.
+- **Export PDF** creates a paginated document with the current case title, rendered Markdown, every code list, and every entry (including unsaved edits). Each entry includes its title, format, complete value, description, generated code, product image, and image URL. Search filters do not limit the export. Compact rows use up to four columns, with wider layouts for dense/linear codes and long metadata; complete entries stay together where practical, with clear code margins and preserved proportions. Failed codes and unavailable images are labeled, and large exports show progress with cancellation.
+- **Codes-only PDF**, beside Export PDF, produces a smaller sheet with only each code and its title underneath. It includes all lists, omits product-image downloads and case metadata, and retains compact scanning margins. Entries without a title use “Untitled product”; failed codes remain labeled.
+- Existing task/code-history exports do not include test plans. Test execution tracking is outside this version. See [the portable JSON format](docs/TEST_PLANS_JSON.md).
+- Limits: 100 lists and 5,000 products per case, 2 MB total case content, and 500 KB Markdown descriptions. The shared generator supports printable ASCII values; test fixtures that would be silently normalized are shown as generation errors instead.
+
+See the [feature plan](docs/TEST_PLANS_FEATURE_PLAN.md) for behavior and scope.
+
 The app is designed as a personal, offline‑first toolbox that runs as a native desktop app using Tauri's lightweight Rust backend.
 
 ---

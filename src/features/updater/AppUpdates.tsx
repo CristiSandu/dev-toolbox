@@ -58,17 +58,17 @@ export function AppUpdates() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" aria-label="About and updates" title="About and updates">
+        <Button variant="ghost" size="icon" aria-label="About and updates" title="About and updates">
           <Info aria-hidden="true" />
-          <span className="hidden sm:inline">About &amp; updates</span>
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Dev Toolbox</DialogTitle>
           <DialogDescription>
             {desktop ? `Version ${version ?? "…"}` : "Updates are available in the desktop app."}
           </DialogDescription>
+          <p className="pt-2 text-sm leading-relaxed text-muted-foreground">Everyday developer tools. Tasks, text, and codes, together on your device.</p>
         </DialogHeader>
 
         <section aria-labelledby="updates-heading" className="space-y-4 border-t pt-5">

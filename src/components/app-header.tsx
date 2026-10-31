@@ -1,43 +1,14 @@
-"use client";
+import { useLocation, Link } from "react-router-dom";
+import { Laptop, ChevronRight } from "lucide-react";
 
-import { useLocation } from "react-router-dom";
-import { SidebarTrigger } from "@/components/ui/sidebar"; // <-- USE IT
-import { cn } from "@/lib/utils";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { AppUpdates } from "@/features/updater/AppUpdates";
-
-const TITLES: Record<string, string> = {
-  "/task": "Task Generator",
-  "/xaml": "Text Formatter",
-  "/diff": "Diff Viewer",
-  "/codes": "Code Generator",
-  "/": "Dev Toolbox",
-};
-
+const titles: Record<string, string> = { "/": "Workspace", "/task": "Tasks", "/xaml": "Text tools", "/codes": "Barcodes & QR", "/test-plans": "Test Plans" };
 export function AppHeader() {
-  const location = useLocation();
-  const title = TITLES[location.pathname] ?? "Dev Toolbox";
-
-  return (
-    <header
-      className={cn(
-        "h-14 border-b flex items-center px-4 gap-4 bg-background/95",
-        "backdrop-blur supports-backdrop-filter:bg-background/60",
-        "sticky top-0 z-40"
-      )}
-    >
-      {/* Sidebar toggle using shadcn component */}
-      <SidebarTrigger />
-
-      {/* Page Title */}
-      <h1 className="min-w-0 truncate text-xl font-semibold tracking-tight">{title}</h1>
-
-      {/* Spacer */}
-      <div className="flex-1" />
-
-      {/* Theme Toggle */}
-      <AppUpdates />
-      <ThemeToggle />
-    </header>
-  );
+  const { pathname } = useLocation();
+  return <header className="app-header">
+    <div className="flex min-w-0 items-center gap-2.5">
+      <Link to="/" className="header-brand">Dev Toolbox</Link><ChevronRight className="size-3.5 text-muted-foreground" aria-hidden="true" />
+      <span className="truncate font-medium">{titles[pathname] ?? "Workspace"}</span>
+    </div>
+    <span className="local-status"><Laptop className="size-3.5" aria-hidden="true" /> On your device</span>
+  </header>;
 }

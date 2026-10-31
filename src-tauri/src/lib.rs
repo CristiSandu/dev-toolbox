@@ -2,6 +2,7 @@ mod barcodes;
 mod codegen_history;
 mod commands;
 mod db;
+mod test_plans;
 
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -24,6 +25,19 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             greet,
+            test_plans::list_test_projects,
+            test_plans::save_test_project,
+            test_plans::delete_test_project,
+            test_plans::list_test_cases,
+            test_plans::save_test_case,
+            test_plans::delete_test_case,
+            test_plans::get_test_case_revisions,
+            test_plans::export_test_project,
+            test_plans::export_test_case,
+            test_plans::save_test_case_pdf,
+            test_plans::fetch_test_product_image,
+            test_plans::read_test_plan_import,
+            test_plans::import_test_plan,
             commands::save_task,
             commands::get_tasks,
             commands::delete_task,

@@ -1,56 +1,19 @@
-"use client";
-
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
+import { Check, LoaderCircle } from "lucide-react";
+import { toast } from "sonner";
 
-type AnimatedActionButtonProps = {
-  onAction: () => void | Promise<void>;
-  label: string;
-  Icon: React.ComponentType<{ size?: number }>;
-  doneLabel?: string;
-};
-
-export function AnimatedActionButton({
-  onAction,
-  label,
-  Icon,
-  doneLabel = "Done",
-}: AnimatedActionButtonProps) {
-  const [done, setDone] = useState(false);
-
-  const handleClick = async () => {
-    await onAction();
-    setDone(true);
-    setTimeout(() => setDone(false), 1200);
+type Props = { onAction: () => void | Promise<void>; label: string; Icon: React.ComponentType<{ size?: number }>; doneLabel?: string };
+export function AnimatedActionButton({ onAction, label, Icon, doneLabel = "Done" }: Props) {
+  const [state, setState] = useState<"idle" | "busy" | "done">("idle");
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => () => clearTimeout(timer.current), []);
+  const run = async () => {
+    setState("busy");
+    try { await onAction(); setState("done"); clearTimeout(timer.current); timer.current = setTimeout(() => setState("idle"), 1600); }
+    catch (error) { setState("idle"); toast.error(`Could not ${label.toLowerCase()}`, { description: String(error) }); }
   };
-
-  return (
-    <Button
-      onClick={handleClick}
-      className="relative flex items-center gap-2 overflow-hidden active:scale-95 transition-transform"
-    >
-      {/* Normal state */}
-      <span
-        className={`flex items-center gap-2 transition-all duration-200 ${
-          done ? "-translate-y-full opacity-0" : "translate-y-0 opacity-100"
-        }`}
-      >
-        <Icon size={16} />
-        <span>{label}</span>
-      </span>
-
-      {/* Done state */}
-      <span
-        className={`absolute inset-0 flex items-center justify-center gap-2 transition-all duration-200 ${
-          done
-            ? "translate-y-0 opacity-100 text-emerald-500"
-            : "translate-y-full opacity-0"
-        }`}
-      >
-        <Check size={16} />
-        <span>{doneLabel}</span>
-      </span>
-    </Button>
-  );
+  return <Button variant="outline" onClick={() => void run()} disabled={state === "busy"} aria-live="polite">
+    {state === "done" ? <Check size={16} /> : state === "busy" ? <LoaderCircle size={16} className="animate-spin" /> : <Icon size={16} />}{state === "done" ? doneLabel : label}
+  </Button>;
 }

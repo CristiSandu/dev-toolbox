@@ -1,25 +1,37 @@
 import "./App.css";
 import { AppSidebar } from "./components/app-sidebar";
-import { Outlet } from "react-router-dom";
-import { SidebarProvider } from "./components/ui/sidebar";
+import { Outlet, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { TooltipProvider } from "./components/ui/tooltip";
 import { AppHeader } from "./components/app-header";
 import { Toaster } from "sonner";
 
 function App() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    const handler = (event: KeyboardEvent) => {
+      if (!(event.metaKey || event.ctrlKey) || event.altKey || event.shiftKey) return;
+      const route = ({ "0": "/", "1": "/task", "2": "/xaml", "3": "/codes", "4": "/test-plans" } as Record<string, string>)[event.key];
+      if (route) { event.preventDefault(); navigate(route); }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [navigate]);
   return (
-    <SidebarProvider>
-      <div className="flex h-screen w-screen overflow-hidden">
+    <TooltipProvider delayDuration={250}>
+      <a className="skip-link" href="#workspace">Skip to workspace</a>
+      <div className="app-shell">
         <AppSidebar />
 
-        <div className="flex flex-col flex-1">
+        <div className="app-body">
           <AppHeader />
-          <main className="flex-1 overflow-auto bg-background p-6">
+          <main id="workspace" tabIndex={-1} className="app-workspace">
             <Outlet />
-            <Toaster />
+            <Toaster richColors closeButton />
           </main>
         </div>
       </div>
-    </SidebarProvider>
+    </TooltipProvider>
   );
 }
 
