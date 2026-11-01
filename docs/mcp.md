@@ -55,8 +55,9 @@ The executable exposes all fifteen tools without arguments. `--native` remains
 accepted for compatibility with older launchers; it exposes the same tool set.
 
 Build installers through `npm run tauri build -- ...`. The npm wrapper builds the
-native sidecar and applies `src-tauri/tauri.mcp.conf.json` to package it and the
-font license. Node is a development/build dependency only; no Node executable,
+native executable, which Tauri discovers in `src/bin`, and applies
+`src-tauri/tauri.mcp.conf.json` for the font license. The Cargo executable must
+not also be registered in `externalBin`, because that duplicates MSI components. Node is a development/build dependency only; no Node executable,
 JavaScript PDF bundle, or npm packages are included in the installation. The app
 and MCP both call the same Rust PDF renderer. Fonts are embedded in the binaries
 and subset into each PDF. A direct `npx tauri build` bypasses sidecar preparation.

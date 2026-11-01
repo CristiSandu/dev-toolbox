@@ -1,9 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "bundle": {
-    "externalBin": [
-      ".mcp-bundle/dev-toolbox-mcp"
-    ],
     "resources": {
       "assets/fonts/LICENSE.txt": "mcp/Roboto-OFL.txt"
     }
