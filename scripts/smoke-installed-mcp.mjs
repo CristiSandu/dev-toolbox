@@ -1,9 +1,9 @@
 // Exercises a relocated installation with no Node on PATH and an isolated database.
 import assert from 'node:assert/strict';
-import { spawn, spawnSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { createInterface } from 'node:readline';
 import { createServer } from 'node:http';
-import { cp, copyFile, mkdtemp, mkdir, readFile, rm, rename } from 'node:fs/promises';
+import { copyFile, mkdtemp, mkdir, readFile, rm } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 
@@ -11,16 +11,10 @@ const scratch = await mkdtemp(join(tmpdir(), 'toolbox-installed-mcp-'));
 const suffix = process.platform === 'win32' ? '.exe' : '';
 const mac = process.platform === 'darwin';
 const bin = join(scratch, 'Installed App', ...(mac ? ['Contents', 'MacOS'] : []));
-const resources = mac ? join(bin, '../Resources/mcp') : join(bin, 'mcp');
 await mkdir(bin, { recursive: true });
-await mkdir(resources, { recursive: true });
 const source = resolve(process.argv[2]);
-const sourceResources = process.argv[3] ? resolve(process.argv[3]) : mac ? join(dirname(source), '../Resources/mcp') : join(dirname(source), 'mcp');
-const sourceRuntime = process.argv[4] ? resolve(process.argv[4]) : join(dirname(source), `dev-toolbox-mcp-runtime${suffix}`);
 await copyFile(source, join(bin, `dev-toolbox-mcp${suffix}`));
-await copyFile(sourceRuntime, join(bin, `dev-toolbox-mcp-runtime${suffix}`));
-await cp(sourceResources, resources, { recursive: true });
-const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aV1cAAAAASUVORK5CYII=', 'base64');
+let png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aV1cAAAAASUVORK5CYII=', 'base64');
 const images = createServer((_request, response) => { response.writeHead(200, { 'Content-Type': 'image/png' }); response.end(png); });
 await new Promise(resolve => images.listen(0, '127.0.0.1', resolve));
 const imageUrl = `http://127.0.0.1:${images.address().port}/image.png`;
@@ -55,6 +49,7 @@ try {
   assert.equal(initialized.serverInfo.name, 'dev-toolbox-test-plans');
   child.stdin.write(JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' }) + '\n');
   assert.equal((await rpc('tools/list')).tools.length, 15);
+  png = Buffer.from((await tool('generate_barcode', { kind: 'qr', data: 'Product image', format: 'png' })).split(',')[1], 'base64');
   assert.deepEqual(await tool('list_test_projects'), []);
   const projectId = await tool('save_test_project', { name: 'Installed smoke' });
   const content = { schemaVersion: 1, title: 'Installed export', descriptionMarkdown: '# Steps\n\n- [ ] Scan **every** product.', lists: [{ id: 'list', name: 'Codes', products: ['EAN-13', 'Code128', 'DataMatrix', 'QR Code'].map((type, index) => ({ id: `p${index}`, title: type, type, text: type === 'EAN-13' ? '4006381333931' : 'Installed-code-001', imageUrl: index === 0 ? imageUrl : '', description: 'Test description' })) }] };
@@ -84,10 +79,6 @@ try {
   const exited = new Promise(resolve => child.once('exit', resolve));
   child.stdin.end();
   await exited;
-  await rename(join(bin, `dev-toolbox-mcp-runtime${suffix}`), join(bin, 'disabled-runtime'));
-  const missing = spawnSync(join(bin, `dev-toolbox-mcp${suffix}`), [], { cwd: scratch, env: { ...process.env, PATH: '' }, input: '', encoding: 'utf8', timeout: 5000 });
-  assert.notEqual(missing.status, 0);
-  assert.match(missing.stderr, /MCP components are missing/);
   console.log('Installed MCP smoke passed: 15 tools, all barcode formats, PNG images, both PDF modes, revisions/conflicts, JSON transfer and deletion; empty PATH, relocated files, isolated data.');
 } finally {
   child.stdin.end();

@@ -77,6 +77,28 @@ fn call(conn: &mut Connection, name: &str, a: &Value) -> Result<Value, String> {
         "fetch_test_product_image" => encode(tauri::async_runtime::block_on(
             plans::fetch_test_product_image(arg(a, "url")?),
         )?),
+        "export_test_case_pdf" => {
+            let id = arg(a, "caseId")?;
+            let saved = plans::read_case(conn, id)?;
+            let project: String = conn
+                .query_row(
+                    "SELECT name FROM test_projects WHERE id=?1",
+                    [saved.project_id],
+                    |row| row.get(0),
+                )
+                .map_err(|e| e.to_string())?;
+            let result = crate::test_plan_pdf::export(
+                &saved.content,
+                &project,
+                &arg::<String>(a, "filePath")?,
+                optional(a, "codesOnly")?.unwrap_or(false),
+                &std::sync::atomic::AtomicBool::new(false),
+                |_| {},
+            )?;
+            let mut value = serde_json::to_value(result).map_err(|e| e.to_string())?;
+            value["revision"] = json!(saved.revision);
+            Ok(value)
+        }
         "save_test_case_pdf" => encode(plans::save_test_case_pdf(
             arg(a, "filePath")?,
             arg(a, "bytes")?,
@@ -228,7 +250,7 @@ mod tests {
         assert_eq!(responses[2]["result"]["protocolVersion"], "2025-11-25");
         assert_eq!(
             responses[3]["result"]["tools"].as_array().unwrap().len(),
-            14
+            15
         );
     }
     #[test]

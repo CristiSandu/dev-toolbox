@@ -434,19 +434,11 @@ export default function TestPlans() {
       const result = await createCasePdf(
         content,
         projectName,
+        filePath,
         controller.signal,
         setPdfProgress,
         codesOnly,
       );
-      if (result.buffer.length > 64_000_000)
-        throw new Error(
-          "PDF exceeds 64 MB. Reduce product-image sizes and try again.",
-        );
-      setPdfProgress("Saving PDF…");
-      await invoke("save_test_case_pdf", {
-        filePath,
-        bytes: Array.from(result.buffer),
-      });
       const notes = [
         result.failedCodes
           ? `${result.failedCodes} codes could not be generated and are labeled in the PDF.`

@@ -38,7 +38,7 @@ Use `x86_64-apple-darwin` on Intel macOS. On Windows x64 use:
 npm run tauri build -- --ci --config src-tauri/tauri.unsigned.conf.json --target x86_64-pc-windows-msvc --bundles nsis msi -- --locked
 ```
 
-The `npm run tauri` wrapper first builds the native MCP sidecar and bundles a matching private Node runtime, PDF JavaScript dependencies, and fonts. It applies `tauri.mcp.conf.json` so the installers and updater archives contain every component. Use the official standalone Node distribution (not a runtime linked to Homebrew libraries) and native runners with matching Node architecture for all three release targets; do not bypass the wrapper with a direct `npx tauri build`. CI verifies the relocated MCP installation without system Node and with isolated data.
+The `npm run tauri` wrapper first builds the native MCP sidecar with its Rust PDF renderer and embedded fonts. It applies `tauri.mcp.conf.json` so installers and updater archives contain the sidecar and font license. No Node runtime or JavaScript PDF bundle is shipped. Do not bypass the wrapper with a direct `npx tauri build`. CI verifies the relocated standalone MCP executable without Node or other application files, using isolated data.
 
 The Rust target must be installed with `rustup target add <target>`. An explicit target places build output under `src-tauri/target/<target>/release/bundle/`.
 

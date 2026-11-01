@@ -212,8 +212,6 @@ pub fn generate_barcode(
         // ---------- Code128 via barcoders ----------
         //
         (CodeKind::Code128, ImageFormat::Svg) => {
-            eprintln!("Entering Code128 SVG branch with data: {data:?}");
-
             let cleaned = to_code128_data(&data);
             if cleaned.is_empty() {
                 return Err("Input is empty or only contains invalid characters".into());

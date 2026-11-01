@@ -31,7 +31,7 @@ directory empty. No system PATH configuration is required.
 
 The status reports the last check, not active agent connections. Stdio processes
 are owned by the clients that launch them. App updates replace the bundled MCP
-server, private runtime, and PDF renderer together. Keep the app at the same
+server and native PDF renderer together. Keep the app at the same
 installation path and reconnect your MCP client after an update. If you move the
 app, copy the new configuration. Existing connections pointing to a source
 checkout continue to use that checkout; replace them once with the installed
@@ -45,26 +45,21 @@ Developers need the usual app prerequisites and Node 22.12+. After `npm ci`, run
 npm run build:mcp
 ```
 
-This builds the native helper and stages its matching private runtime and bundled
-renderer. Development MCP settings can then use those staged files. The source
-entrypoint remains usable with system Node:
+This builds and stages the native helper, including its Rust PDF renderer and
+embedded fonts. Development MCP settings can then use the staged executable.
+You can also build it with `cargo build --manifest-path src-tauri/Cargo.toml --bin dev-toolbox-mcp` and configure that executable directly. The legacy
+`scripts/test-plans-mcp.mjs` is only a compatibility launcher for existing
+source-checkout connections; it performs no PDF generation.
 
-```sh
-node --experimental-strip-types scripts/test-plans-mcp.mjs /absolute/path/to/dev-toolbox-mcp
-```
+The executable exposes all fifteen tools without arguments. `--native` remains
+accepted for compatibility with older launchers; it exposes the same tool set.
 
-`dev-toolbox-mcp --native` is the internal fourteen-tool backend used by the PDF
-bridge; the public command without arguments always requires the complete bundled
-runtime and exposes fifteen tools. It fails clearly if components are missing.
-
-Build installers through `npm run tauri build -- ...`. The npm wrapper prepares
-the matching native sidecars, bundles all PDF JavaScript dependencies and fonts,
-and applies `src-tauri/tauri.mcp.conf.json` to package them. Build on a native
-runner for each supported target; the script refuses to copy a runtime with the
-wrong architecture. A direct `npx tauri build` bypasses this packaging step.
-Third-party notices and the runtime version are included under the app's `mcp`
-resources. Keep private runtime security updates part of the regular app release
-process; changing a system Node installation does not change the bundled runtime.
+Build installers through `npm run tauri build -- ...`. The npm wrapper builds the
+native sidecar and applies `src-tauri/tauri.mcp.conf.json` to package it and the
+font license. Node is a development/build dependency only; no Node executable,
+JavaScript PDF bundle, or npm packages are included in the installation. The app
+and MCP both call the same Rust PDF renderer. Fonts are embedded in the binaries
+and subset into each PDF. A direct `npx tauri build` bypasses sidecar preparation.
 
 CI runs `scripts/smoke-installed-mcp.mjs` against the packaged macOS helper and the
 Windows staging layout. It relocates components to a directory containing spaces,
@@ -137,7 +132,7 @@ HTTP(S) product images using this machine's access. Use trusted clients.
 
 `export_test_case_pdf` uses the shared app renderer for full-case and codes-only
 PDFs. Its result reports the saved revision, failed barcodes, and omitted images.
-PNG and JPEG product images are embedded; WebP/GIF are counted as unavailable.
+PNG, JPEG, WebP, and GIF product images are supported. They are limited to 40 million source pixels and resized to 320 pixels for export; GIFs use the first frame. A 64 MB decoded-image budget bounds memory for large cases. Unavailable or over-budget images retain their URLs and are counted in the result.
 `save_test_case_pdf` alternatively saves PDF bytes supplied by the client.
 Preview, clipboard, file dialogs, drafts, and selection remain GUI features.
 This server provides backend feature access, not GUI automation.

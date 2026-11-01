@@ -38,7 +38,7 @@ fn setup() -> Result<McpSetup, String> {
         native
     };
     Ok(McpSetup {
-        available: native.is_file() && crate::mcp_runtime::runtime_paths(&native).is_ok(),
+        available: native.is_file(),
         executable_path: native.to_string_lossy().into_owned(),
         development: cfg!(debug_assertions),
     })

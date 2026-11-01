@@ -640,5 +640,29 @@
         "format"
       ]
     }
+  },
+  {
+    "name": "export_test_case_pdf",
+    "description": "Render a saved test case to a local PDF using the native renderer. Supports full case or codesOnly. Returns revision, failed barcode and unavailable image counts.",
+    "inputSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "caseId": {
+          "type": "integer"
+        },
+        "filePath": {
+          "type": "string"
+        },
+        "codesOnly": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "required": [
+        "caseId",
+        "filePath"
+      ]
+    }
   }
 ]
