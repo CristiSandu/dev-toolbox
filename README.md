@@ -2,6 +2,8 @@
 
 Dev Toolbox is a desktop helper application built with **Tauri 2 + React 19** that bundles a set of small productivity tools for developers.
 
+[Open the illustrated user walkthrough](docs/walkthrough/index.html) — a standalone HTML guide with screenshots from the installed desktop app.
+
 ---
 
 ## Getting started
@@ -61,7 +63,7 @@ Pull requests validate Windows x64 and macOS Apple Silicon/Intel builds. Release
 
 ### In-app updates
 
-Use **About & updates** in the header to check for releases, review notes, and choose **Update and restart**. Packaged apps also notify when a background check finds a new version. Users on `0.1.9` need one manual installation of `0.2.0`. See [updater signing and release setup](docs/UPDATER.md) before publishing a release; ordinary contributor builds use the unsigned override above.
+Use **About and updates** at the bottom of the left navigation rail to check for releases, review notes, and choose **Update and restart**. Packaged apps also notify when a background check finds a new version. Users on `0.1.9` need one manual installation of `0.2.0`. See [updater signing and release setup](docs/UPDATER.md) before publishing a release; ordinary contributor builds use the unsigned override above.
 
 ### Debug on macOS (quarantine)
 
@@ -76,22 +78,38 @@ If macOS flags the app as coming from an unidentified developer:
 
 ---
 
-## Current Tools
+## Using the app
 
-### 1. Task Generator
+Home opens the four tools and shows recent saved tasks and code generations. Use the left navigation rail or these shortcuts:
+
+| Shortcut | Destination |
+| --- | --- |
+| Cmd/Ctrl+0 | Home |
+| Cmd/Ctrl+1 | Tasks |
+| Cmd/Ctrl+2 | Text tools |
+| Cmd/Ctrl+3 | Barcodes & QR |
+| Cmd/Ctrl+4 | Test Plans |
+
+The theme control at the bottom of the rail switches between light and dark appearance. Saved tasks, code history, and test plans remain on this device. Core tools and OCR work locally; remote product images and update checks need network access.
+
+The [illustrated walkthrough](docs/walkthrough/index.html) covers the installed app with step-by-step instructions and embedded screenshots. Download or open the HTML file in a browser to use the full guide offline.
+
+## Current tools
+
+### 1. Tasks
 A comprehensive task management tool for developers working with Git workflows:
 - **Paste Jira screenshots** from the clipboard with Cmd+V / Ctrl+V, or select/drop PNG/JPEG files; review local OCR suggestions before saving ([usage and limits](docs/SCREENSHOT_CAPTURE.md))
-- **Store tasks** in a local SQLite database
+- **Store tasks** in a local SQLite database, including optional Jira issue type (Bug, Story, Task, Epic, or Sub-task)
 - **Generate consistent Git branch names** from task metadata (supports `feature`, `bugfix`, `hotfix` types)
 - **Generate PR titles** automatically from task number and name
 - **View task history** with search and filter capabilities
 - **Sort tasks** by creation date (newest/oldest)
 - **Delete tasks** from the database
-- **View task details** in read-only mode
+- **View task details** in read-only mode, copy saved outputs, or use a saved task as a new draft
 - **Export/Import tasks** - Export all tasks to JSON file or import tasks from a previously exported JSON file
 - Responsive design with resizable panels for desktop and stacked layout for mobile
 
-### 2. Text Formatter (XML/XAML, JSON & Diff)
+### 2. Text tools (XML/XAML, JSON & comparison)
 An XML/XAML and JSON formatting tool with syntax highlighting:
 - **Format XAML/XML** code with proper indentation
 - **Format JSON** using the language selector, preserving number precision and key order; invalid JSON leaves the previous output intact
@@ -102,10 +120,10 @@ An XML/XAML and JSON formatting tool with syntax highlighting:
   - `Cmd/Ctrl+F` - Open search in editor
 - **Resizable panels** for desktop, stacked layout for mobile
 - Built with `vkbeautify` for XML formatting and separate XML syntax validation
-- **Diff tab** with editable Original/Modified text, inline/split view, Swap, copy, and explicit whitespace handling
+- **Compare tab** with editable Original/Modified text, inline/split view, Swap, copy, and explicit whitespace handling
 - See [Monaco usage, limits, and verification](docs/MONACO.md)
 
-### 3. Code Generator (Barcode & QR Code)
+### 3. Barcodes & QR
 A versatile barcode and QR code generation tool:
 - **Supported code types**:
   - **QR Code** - Standard QR codes
@@ -114,15 +132,15 @@ A versatile barcode and QR code generation tool:
   - **Code128** - Linear barcode format
 - **Export formats**: SVG and PNG
 - **Two generation modes**:
-  - **Single mode**: Generate one code at a time
-  - **Multi mode**: Batch generation with two input formats:
+  - **Single tab**: Generate one code at a time
+  - **Batch tab**: Batch generation with two input formats:
     - **Lines mode**: One value per line, shared code type
     - **JSON mode**: JSON array with individual `text` + `type` per item
 - **History management**:
   - Local SQLite storage of all generation actions
   - Searchable history list
   - View-only JSON payload preview
-  - Duplicate past states back into the editor
+  - Use again to load past states back into the editor
   - Delete history entries
   - **Export/Import history** - Export all history entries to JSON file or import history from a previously exported JSON file
 - Adjustable preview size for better readability
@@ -156,7 +174,9 @@ The app is designed as a personal, offline‑first toolbox that runs as a native
 - **Tauri 2** React template
 - **Tailwind CSS 4** & **shadcn/ui** components
 - **React Router DOM** for navigation
-- **Ace Editor** (react-ace) for code editing
+- **Monaco Editor** (`@monaco-editor/react`) for XML/JSON editing and text comparison
+- **Tesseract.js** with bundled English assets for local screenshot OCR
+- **react-markdown** and **remark-gfm** for test case descriptions
 - **Sonner** for toast notifications
 - **Lucide React** for icons
 - Barcode generation runs in the Rust backend.
@@ -178,6 +198,8 @@ The app is designed as a personal, offline‑first toolbox that runs as a native
   - `chrono` for timestamp handling
   - `base64` for image encoding
   - `urlencoding` for URL encoding
+- **krilla**, **krilla-svg**, and **pulldown-cmark** for native PDF rendering shared by the app and MCP server
+- **reqwest** and **image** for product-image retrieval and decoding
 - **Custom Modules**:
   - `db.rs` – SQLite connection + table creation helpers
   - `commands.rs` – Task save/load/delete commands
@@ -204,14 +226,17 @@ dev-toolbox/
 │  │  │  ├─ input.tsx
 │  │  │  ├─ sidebar.tsx
 │  │  │  └─ ...                  # Other UI components
-│  │  ├─ app-sidebar.tsx         # Main navigation sidebar
+│  │  ├─ app-sidebar.tsx         # Navigation rail, theme, and updates
 │  │  ├─ app-header.tsx          # App header component
 │  │  ├─ animated-copy-button.tsx
 │  │  └─ animated-action-button.tsx
+│  ├─ features/                 # Formatter, OCR, updates, and Test Plans UI
 │  ├─ pages/
 │  │  ├─ CodeGenerator.tsx       # Code generator page
 │  │  ├─ TaskGenerator.tsx       # Task generator page
-│  │  └─ XamlFormatter.tsx       # XAML formatter page
+│  │  ├─ XamlFormatter.tsx       # XML/JSON formatter and text comparison
+│  │  ├─ TestPlans.tsx           # Test cases and product lists
+│  │  └─ Home.tsx                # Tool launchers and recent activity
 │  ├─ hooks/
 │  │  ├─ use-barcode.ts          # Hook that wraps Tauri barcode command
 │  │  └─ use-mobile.ts           # Mobile detection hook
@@ -230,10 +255,12 @@ dev-toolbox/
 │  │  ├─ barcodes.rs             # generate_barcode Tauri command
 │  │  ├─ db.rs                   # get_db() and table creation
 │  │  ├─ commands.rs             # save_task / get_tasks / delete_task
-│  │  └─ codegen_history.rs      # save_codegen_state / get_codegen_history / delete
+│  │  ├─ codegen_history.rs      # Code generation history
+│  │  ├─ test_plans.rs           # Projects, cases, revisions, and JSON transfer
+│  │  ├─ test_plan_pdf.rs        # Shared native PDF renderer
+│  │  └─ mcp.rs                  # Local stdio MCP server
 │  ├─ Cargo.toml                 # Rust dependencies
-│  ├─ tauri.conf.json            # Tauri configuration
-│  └─ tasks.db                   # SQLite database (created at runtime)
+│  └─ tauri.conf.json            # Tauri configuration
 ├─ package.json                  # Node.js dependencies
 ├─ tsconfig.json                 # TypeScript configuration
 └─ vite.config.ts                # Vite configuration
@@ -243,11 +270,11 @@ dev-toolbox/
 
 ## Databases & Persistence
 
-The app uses a **single local SQLite database** (`tasks.db`) stored in the Tauri app data directory, created automatically on first use. Both the tasks and code generator history are stored in the same database file.
+The app uses a **single local SQLite database** (`tasks.db`) stored in the Tauri app data directory, created automatically on first use. Tasks, code generator history, Test Plans projects, cases, and revisions share this database. Schema migrations preserve existing records. Separate JSON exports are available for tasks, code history, and Test Plans; one export does not back up the other areas.
 
 ### Database Schema
 
-The database contains two tables:
+The database currently contains five tables: `tasks`, `codegen_history`, `test_projects`, `test_cases`, and `test_case_revisions`. The task and code-history schemas are shown below; Test Plans stores case documents and revision snapshots as JSON, linked to projects and cases with foreign keys.
 
 #### Tasks Table
 
@@ -259,7 +286,8 @@ CREATE TABLE IF NOT EXISTS tasks (
   feature_type TEXT NOT NULL,
   branch       TEXT NOT NULL,
   pr_title     TEXT NOT NULL,
-  created_at   TEXT NOT NULL
+  created_at   TEXT NOT NULL,
+  jira_issue_type TEXT
 );
 ```
 
@@ -278,7 +306,7 @@ CREATE TABLE IF NOT EXISTS codegen_history (
 ### Tauri Commands
 
 **Task Management:**
-- `save_task(name, number, feature_type, branch, pr_title)` - Save a new task
+- `save_task(name, number, feature_type, branch, pr_title, jira_issue_type)` - Save a new task
 - `get_tasks()` - Retrieve all tasks (sorted by creation date)
 - `delete_task(id)` - Delete a task by ID
 - `get_last_task()` - Get the most recently created task
@@ -291,6 +319,8 @@ CREATE TABLE IF NOT EXISTS codegen_history (
 - `delete_codegen_entry(id)` - Delete a history entry by ID
 - `export_codegen_history(file_path)` - Export all history entries to a JSON file
 - `import_codegen_history(file_path)` - Import history entries from a JSON file (returns count of imported entries)
+
+**Test Plans and agent access:** project/case CRUD, revision history, JSON import/export, product-image fetching, cancellable PDF export, and MCP setup commands are registered in `src-tauri/src/lib.rs`. See [Test Plans JSON](docs/TEST_PLANS_JSON.md) and [MCP setup and tools](docs/mcp.md) for their portable formats and agent interface.
 
 The React components consume these commands through `@tauri-apps/api/core`'s `invoke` function.
 
@@ -350,7 +380,7 @@ When importing, the original timestamps are preserved, and new database IDs are 
 
 Handled by the [`quickcodes`](https://crates.io/crates/quickcodes) crate:
 
-- **QR Code**: Generated directly from the input string, supports any text data
+- **QR Code**: Encodes text or URLs. The shared app input path is limited to printable ASCII; do not assume Unicode or control characters will be preserved.
 - **EAN‑13**: Automatic check digit calculation and validation:
   - If you enter **12 digits** → the check digit is computed automatically
   - If you enter **13 digits** → the check digit is verified; invalid numbers return an error
@@ -385,18 +415,17 @@ Both SVG and PNG formats are supported for all barcode types:
 
 ## Code Generator History View
 
-The **History** tab in the Code Generator provides:
+The **History** tab in Barcodes & QR provides:
 
 - **Searchable list** of all history entries showing:
-  - Entry ID
-  - Generation mode (Single/Multi)
+  - Code format or batch indicator
   - Summary (truncated input text)
   - Creation timestamp
 - **Detailed view** of the selected entry:
-  - Full creation date and time
+  - Saved summary and creation timestamp
   - Complete JSON payload (pretty‑printed, view‑only)
-  - **Duplicate button** to load the state back into the editor
-  - **Delete button** to remove the entry from history
+  - **Use again button** to load the state back into the editor
+  - Per-entry delete action in the history list
 - **Export/Import buttons** in the header:
   - **Export** - Save all history entries to a JSON file
   - **Import** - Load history entries from a JSON file
@@ -414,6 +443,9 @@ The app uses Tauri's permission system to control access to system resources. Th
 - **dialog:allow-save** - Save file dialogs (for export functionality)
 - **dialog:allow-open** - Open file dialogs (for import functionality)
 - **dialog:default** - Default dialog functionality
+- **core:window:allow-destroy** - Close the window after unsaved-change handling
+- **updater:default** - Check for and install app updates
+- **process:allow-restart** - Restart after an update
 
 These permissions are automatically granted to the main window. If you need to add additional capabilities, you can modify the capabilities file and restart the app.
 
@@ -434,33 +466,13 @@ These permissions are automatically granted to the main window. If you need to a
 
 ---
 
-## Future Ideas
+## Scope and limits
 
-Some possible future additions:
-
-- **Additional Tools**:
-  - JSON/YAML formatter
-  - Regex tester
-  - UUID generator
-  - Base64 encoder/decoder
-  - Color picker/converter
-- **History Management**:
-  - Export/import of history as JSON files (implemented)
-  - Bulk delete operations
-  - History filtering by date range
-- **Settings & Customization**:
-  - Settings page for default preferences
-  - Default barcode types
-  - Custom branch/PR templates
-  - Theme customization (dark/light mode toggle)
-- **UI Enhancements**:
-  - Multi‑window support in Tauri
-  - Keyboard shortcuts for all tools
-  - Drag-and-drop file support
-- **Task Generator**:
-  - Task templates
-  - Task categories/tags
-  - Export tasks to JSON (implemented)
+- Test Plans prepares test descriptions and product fixtures; it does not track test execution results.
+- Task and code-history exports are separate from Test Plans JSON exports. Test Plans transfers exclude revision history and downloaded/generated images.
+- Product image URLs need network access. The main tools, local storage, OCR, and code generation run locally.
+- Barcode input supports printable ASCII. Test Plans reports values that would otherwise be silently normalized as generation errors.
+- For input limits and verification notes, see [screenshot OCR](docs/SCREENSHOT_CAPTURE.md), [text tools](docs/MONACO.md), and [Test Plans JSON](docs/TEST_PLANS_JSON.md).
 
 ---
 
