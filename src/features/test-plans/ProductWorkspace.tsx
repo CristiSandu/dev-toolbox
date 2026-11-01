@@ -569,6 +569,7 @@ export function ProductWorkspace({
               </div>
               <ProductImage
                 src={selected.imageUrl}
+                zoomable
                 title={productLabel(selected)}
                 thumbnail
               />

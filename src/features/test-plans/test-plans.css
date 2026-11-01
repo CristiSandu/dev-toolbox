@@ -452,6 +452,10 @@
   flex: 1;
   min-width: 0;
 }
+.tp-preview-scroll > header .tp-image-zoom {
+  flex-shrink: 0;
+  margin-left: auto;
+}
 .tp-preview-scroll > header .tp-thumbnail {
   width: 80px;
   height: 80px;
@@ -710,4 +714,33 @@
   .tp-description-toolbar {
     padding: 12px;
   }
+}
+
+.tp-image-zoom {
+  display: block;
+  max-width: 100%;
+  cursor: zoom-in;
+  border-radius: 4px;
+}
+.tp-image-zoom:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}
+.tp-image-zoom:hover {
+  outline: 1px solid var(--ring);
+  outline-offset: 2px;
+}
+.tp-image-popup {
+  display: grid;
+  place-items: center;
+  min-height: 120px;
+  overflow: auto;
+  background: white;
+  border-radius: 4px;
+}
+.tp-image-popup img {
+  display: block;
+  max-width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
 }

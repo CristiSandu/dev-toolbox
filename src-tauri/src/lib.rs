@@ -2,6 +2,10 @@ mod barcodes;
 mod codegen_history;
 mod commands;
 mod db;
+mod mcp;
+mod mcp_settings;
+pub use mcp::run as run_mcp;
+mod test_plan_pdf;
 mod test_plans;
 
 #[tauri::command]
@@ -12,6 +16,7 @@ fn greet(name: &str) -> String {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .manage(test_plan_pdf::PdfJobs::default())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
@@ -25,6 +30,8 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             greet,
+            mcp_settings::get_mcp_setup,
+            mcp_settings::check_mcp_connection,
             test_plans::list_test_projects,
             test_plans::save_test_project,
             test_plans::delete_test_project,
@@ -35,6 +42,8 @@ pub fn run() {
             test_plans::export_test_project,
             test_plans::export_test_case,
             test_plans::save_test_case_pdf,
+            test_plan_pdf::export_test_case_pdf,
+            test_plan_pdf::cancel_test_case_pdf,
             test_plans::fetch_test_product_image,
             test_plans::read_test_plan_import,
             test_plans::import_test_plan,

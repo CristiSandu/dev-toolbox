@@ -9,28 +9,28 @@ const MAX_CONTENT_BYTES: usize = 2_000_000;
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Product {
-    id: String,
-    title: String,
-    text: String,
+    pub(crate) id: String,
+    pub(crate) title: String,
+    pub(crate) text: String,
     #[serde(rename = "type")]
-    code_type: String,
-    image_url: String,
-    description: String,
+    pub(crate) code_type: String,
+    pub(crate) image_url: String,
+    pub(crate) description: String,
 }
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CodeList {
-    id: String,
-    name: String,
-    products: Vec<Product>,
+    pub(crate) id: String,
+    pub(crate) name: String,
+    pub(crate) products: Vec<Product>,
 }
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CaseContent {
-    schema_version: u32,
-    title: String,
-    description_markdown: String,
-    lists: Vec<CodeList>,
+    pub(crate) schema_version: u32,
+    pub(crate) title: String,
+    pub(crate) description_markdown: String,
+    pub(crate) lists: Vec<CodeList>,
 }
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -43,12 +43,12 @@ pub struct Project {
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TestCase {
-    id: i64,
-    project_id: i64,
-    content: CaseContent,
-    revision: i64,
-    created_at: String,
-    updated_at: String,
+    pub(crate) id: i64,
+    pub(crate) project_id: i64,
+    pub(crate) content: CaseContent,
+    pub(crate) revision: i64,
+    pub(crate) created_at: String,
+    pub(crate) updated_at: String,
 }
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -74,7 +74,7 @@ fn valid_image_url(value: &str) -> bool {
             && value.len() <= 8192
     })
 }
-fn validate(content: &CaseContent) -> Result<(), String> {
+pub(crate) fn validate(content: &CaseContent) -> Result<(), String> {
     if content.schema_version != 1 || !valid_name(&content.title) {
         return Err(
             "Add a case title of 1–200 characters and use a supported document version.".into(),
@@ -209,7 +209,7 @@ fn product_label(product: &Product) -> &str {
         &product.title
     }
 }
-fn read_case(conn: &Connection, id: i64) -> Result<TestCase, String> {
+pub(crate) fn read_case(conn: &Connection, id: i64) -> Result<TestCase, String> {
     let (project_id, json, revision, created_at, updated_at): (i64, String, i64, String, String) = conn.query_row(
         "SELECT project_id, content_json, revision, created_at, updated_at FROM test_cases WHERE id=?1", [id],
         |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?, r.get(4)?)),
@@ -225,7 +225,10 @@ fn read_case(conn: &Connection, id: i64) -> Result<TestCase, String> {
 }
 #[tauri::command]
 pub fn list_test_projects(app: tauri::AppHandle) -> Result<Vec<Project>, String> {
-    let conn = crate::db::get_db(&app).map_err(|e| e.to_string())?;
+    let mut conn = crate::db::get_db(&app).map_err(|e| e.to_string())?;
+    list_test_projects_db(&mut conn)
+}
+pub(crate) fn list_test_projects_db(conn: &mut Connection) -> Result<Vec<Project>, String> {
     let mut stmt = conn
         .prepare("SELECT id,name,created_at,updated_at FROM test_projects ORDER BY id")
         .map_err(|e| e.to_string())?;
@@ -248,10 +251,17 @@ pub fn save_test_project(
     id: Option<i64>,
     name: String,
 ) -> Result<i64, String> {
+    let mut conn = crate::db::get_db(&app).map_err(|e| e.to_string())?;
+    save_test_project_db(&mut conn, id, name)
+}
+pub(crate) fn save_test_project_db(
+    conn: &mut Connection,
+    id: Option<i64>,
+    name: String,
+) -> Result<i64, String> {
     if !valid_name(&name) {
         return Err("Enter a project name of 1–200 characters.".into());
     }
-    let conn = crate::db::get_db(&app).map_err(|e| e.to_string())?;
     let now = Utc::now().to_rfc3339();
     match id {
         Some(id) => {
@@ -279,7 +289,10 @@ pub fn save_test_project(
 }
 #[tauri::command]
 pub fn list_test_cases(app: tauri::AppHandle) -> Result<Vec<TestCase>, String> {
-    let conn = crate::db::get_db(&app).map_err(|e| e.to_string())?;
+    let mut conn = crate::db::get_db(&app).map_err(|e| e.to_string())?;
+    list_test_cases_db(&mut conn)
+}
+pub(crate) fn list_test_cases_db(conn: &mut Connection) -> Result<Vec<TestCase>, String> {
     let mut stmt = conn
         .prepare("SELECT id FROM test_cases ORDER BY id")
         .map_err(|e| e.to_string())?;
@@ -288,7 +301,7 @@ pub fn list_test_cases(app: tauri::AppHandle) -> Result<Vec<TestCase>, String> {
         .map_err(|e| e.to_string())?
         .collect::<Result<Vec<_>, _>>()
         .map_err(|e| e.to_string())?;
-    ids.into_iter().map(|id| read_case(&conn, id)).collect()
+    ids.into_iter().map(|id| read_case(conn, id)).collect()
 }
 #[tauri::command]
 pub fn save_test_case(
@@ -299,7 +312,16 @@ pub fn save_test_case(
     content: CaseContent,
 ) -> Result<TestCase, String> {
     let mut conn = crate::db::get_db(&app).map_err(|e| e.to_string())?;
-    save_case(&mut conn, id, project_id, expected_revision, &content)
+    save_test_case_db(&mut conn, id, project_id, expected_revision, content)
+}
+pub(crate) fn save_test_case_db(
+    conn: &mut Connection,
+    id: Option<i64>,
+    project_id: i64,
+    expected_revision: i64,
+    content: CaseContent,
+) -> Result<TestCase, String> {
+    save_case(conn, id, project_id, expected_revision, &content)
 }
 fn save_case(
     conn: &mut Connection,
@@ -360,14 +382,20 @@ fn save_case_in_connection(
 }
 #[tauri::command]
 pub fn delete_test_project(app: tauri::AppHandle, id: i64) -> Result<(), String> {
-    let conn = crate::db::get_db(&app).map_err(|e| e.to_string())?;
+    let mut conn = crate::db::get_db(&app).map_err(|e| e.to_string())?;
+    delete_test_project_db(&mut conn, id)
+}
+pub(crate) fn delete_test_project_db(conn: &mut Connection, id: i64) -> Result<(), String> {
     conn.execute("DELETE FROM test_projects WHERE id=?1", [id])
         .map_err(|e| e.to_string())?;
     Ok(())
 }
 #[tauri::command]
 pub fn delete_test_case(app: tauri::AppHandle, id: i64) -> Result<(), String> {
-    let conn = crate::db::get_db(&app).map_err(|e| e.to_string())?;
+    let mut conn = crate::db::get_db(&app).map_err(|e| e.to_string())?;
+    delete_test_case_db(&mut conn, id)
+}
+pub(crate) fn delete_test_case_db(conn: &mut Connection, id: i64) -> Result<(), String> {
     conn.execute("DELETE FROM test_cases WHERE id=?1", [id])
         .map_err(|e| e.to_string())?;
     Ok(())
@@ -377,8 +405,14 @@ pub fn get_test_case_revisions(
     app: tauri::AppHandle,
     case_id: i64,
 ) -> Result<Vec<Revision>, String> {
-    let conn = crate::db::get_db(&app).map_err(|e| e.to_string())?;
-    read_revisions(&conn, case_id)
+    let mut conn = crate::db::get_db(&app).map_err(|e| e.to_string())?;
+    get_test_case_revisions_db(&mut conn, case_id)
+}
+pub(crate) fn get_test_case_revisions_db(
+    conn: &mut Connection,
+    case_id: i64,
+) -> Result<Vec<Revision>, String> {
+    read_revisions(conn, case_id)
 }
 fn read_revisions(conn: &Connection, case_id: i64) -> Result<Vec<Revision>, String> {
     let mut stmt = conn.prepare("SELECT revision,snapshot_json,changes_json,created_at FROM test_case_revisions WHERE case_id=?1 ORDER BY revision DESC").map_err(|e| e.to_string())?;
@@ -466,7 +500,7 @@ pub async fn fetch_test_product_image(url: String) -> Result<String, String> {
 pub fn save_test_case_pdf(file_path: String, bytes: Vec<u8>) -> Result<(), String> {
     write_case_pdf(&file_path, &bytes)
 }
-fn write_case_pdf(file_path: &str, bytes: &[u8]) -> Result<(), String> {
+pub(crate) fn write_case_pdf(file_path: &str, bytes: &[u8]) -> Result<(), String> {
     if !bytes.starts_with(b"%PDF-") || bytes.len() > 64_000_000 {
         return Err("Expected a PDF document under 64 MB.".into());
     }
@@ -558,6 +592,13 @@ pub fn export_test_project(
     file_path: String,
 ) -> Result<(), String> {
     let mut conn = crate::db::get_db(&app).map_err(|e| e.to_string())?;
+    export_test_project_db(&mut conn, project_id, file_path)
+}
+pub(crate) fn export_test_project_db(
+    conn: &mut Connection,
+    project_id: i64,
+    file_path: String,
+) -> Result<(), String> {
     let tx = conn.transaction().map_err(|e| e.to_string())?;
     write_transfer(&file_path, &project_document(&tx, project_id)?)
 }
@@ -632,12 +673,15 @@ pub fn import_test_plan(
     new_project_name: Option<String>,
 ) -> Result<i64, String> {
     let mut conn = crate::db::get_db(&app).map_err(|e| e.to_string())?;
-    import_document(
-        &mut conn,
-        &document,
-        project_id,
-        new_project_name.as_deref(),
-    )
+    import_test_plan_db(&mut conn, document, project_id, new_project_name)
+}
+pub(crate) fn import_test_plan_db(
+    conn: &mut Connection,
+    document: TransferDocument,
+    project_id: Option<i64>,
+    new_project_name: Option<String>,
+) -> Result<i64, String> {
+    import_document(conn, &document, project_id, new_project_name.as_deref())
 }
 
 #[cfg(test)]

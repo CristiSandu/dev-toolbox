@@ -38,6 +38,8 @@ Use `x86_64-apple-darwin` on Intel macOS. On Windows x64 use:
 npm run tauri build -- --ci --config src-tauri/tauri.unsigned.conf.json --target x86_64-pc-windows-msvc --bundles nsis msi -- --locked
 ```
 
+The `npm run tauri` wrapper first builds the native MCP sidecar with its Rust PDF renderer and embedded fonts. Tauri automatically packages the Cargo executable from `src/bin`; the wrapper applies `tauri.mcp.conf.json` for the font license. Do not also register this Cargo executable in `externalBin`, which creates duplicate MSI components. No Node runtime or JavaScript PDF bundle is shipped. Do not bypass the wrapper with a direct `npx tauri build`. CI verifies the relocated standalone MCP executable without Node or other application files, using isolated data.
+
 The Rust target must be installed with `rustup target add <target>`. An explicit target places build output under `src-tauri/target/<target>/release/bundle/`.
 
 The unsigned override is for validation builds. Tagged releases require the updater signing key and generate signed archives/signatures; follow [UPDATER.md](UPDATER.md) for key custody, CI secrets, platform-signing prerequisites, and signed local builds.
@@ -90,6 +92,7 @@ Use a dedicated OS test account or machine. The production identifier is `com.sa
 - [ ] Launch the candidate and verify version, counts, fields, timestamps, task creation, branch/PR copy, XML formatting, all barcode types, SVG/PNG where supported, and both histories after another restart. DataMatrix PNG is currently unsupported by the Rust command; SVG remains available.
 - [ ] Verify task/history JSON export and import in a separate clean test profile. Imports append records and assign new IDs; do not test restoration by importing into the only copy of valuable history.
 - [ ] Start the installed app offline and exercise the local tools. About & updates must report a failed manual check without blocking normal use. Test the actual updater path with a subsequent controlled version before broad rollout.
+- [ ] Open installed Test Plans → MCP settings and check the connection. Connect a real agent using the copied configuration, test full-case/codes-only PDFs and JSON round trips in the test profile without Node installed, then update the app in place and reconnect with the same configuration.
 - [ ] Check keyboard navigation, window resizing, and available themes.
 - [ ] Record installer size and launch timing using [BASELINES.md](BASELINES.md).
 - [ ] Document macOS Gatekeeper/Windows trust prompts honestly. Updater signatures do not replace platform signing/notarization.
