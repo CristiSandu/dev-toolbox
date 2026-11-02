@@ -2,7 +2,7 @@
 
 Dev Toolbox is a desktop helper application built with **Tauri 2 + React 19** that bundles a set of small productivity tools for developers.
 
-[Open the illustrated user walkthrough](docs/walkthrough/index.html) — a standalone HTML guide with screenshots from the installed desktop app.
+[Read the illustrated user walkthrough on the Wiki](https://github.com/CristiSandu/dev-toolbox/wiki) or [download the standalone HTML guide](docs/walkthrough/index.html) for offline viewing.
 
 ---
 
